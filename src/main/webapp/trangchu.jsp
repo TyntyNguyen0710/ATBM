@@ -39,8 +39,6 @@
                                 </head>
 
                                 <body>
-
-                                    <!-- ===================== HEADER / NAVBAR ===================== -->
                                     <header class="navbar">
                                         <a href="trangchu.jsp" class="navbar__logo">
                                             <img src="img/logo.png" alt="Travel Go">
@@ -100,8 +98,6 @@
                                             </div>
                                         </nav>
                                     </header>
-
-                                    <!-- ===================== HERO SLIDER ===================== -->
                                     <section class="hero" aria-label="Ảnh bìa điểm đến">
                                         <div class="hero__track" id="heroTrack">
                                             <div class="hero__slide">
@@ -143,8 +139,6 @@
                                         <div class="hero__dots" id="heroDots" role="tablist"
                                             aria-label="Điều hướng slider"></div>
                                     </section>
-
-                                    <!-- ===================== WHY US ===================== -->
                                     <section class="whyus section">
                                         <div class="container">
                                             <span class="section-label">Về chúng tôi</span>
@@ -203,8 +197,6 @@
                                             </div>
                                         </div>
                                     </section>
-
-                                    <!-- ===================== ĐIỂM ĐẾN ===================== -->
                                     <section class="destinations section section--alt">
                                         <div class="container">
                                             <span class="section-label">Địa điểm</span>
@@ -249,8 +241,6 @@
                                             </div>
                                         </div>
                                     </section>
-
-                                    <!-- ===================== TOUR NỔI BẬT ===================== -->
                                     <section class="featured-tours section">
                                         <div class="container">
                                             <span class="section-label">Nổi bật</span>
@@ -306,8 +296,6 @@
                                                 </div>
                                         </div>
                                     </section>
-
-                                    <!-- ===================== CẨM NANG DU LỊCH ===================== -->
                                     <section class="travel-tips section section--alt">
                                         <div class="container">
                                             <span class="section-label">Cẩm nang</span>
@@ -365,8 +353,6 @@
                                             </div>
                                         </div>
                                     </section>
-
-                                    <!--FOOTER-->
                                     <footer class="footer">
                                         <div class="container">
                                             <div class="footer__top">
@@ -438,7 +424,6 @@
                                         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
                                         crossorigin="anonymous"></script>
                                     <script>
-                                        /* ---- Hamburger menu ---- */
                                         const toggle = document.getElementById('menuToggle');
                                         const nav = document.getElementById('mainNav');
                                         toggle.addEventListener('click', () => {
@@ -447,14 +432,12 @@
                                             toggle.classList.toggle('is-open', open);
                                         });
 
-                                        /* ---- Hero Slider ---- */
                                         (function () {
                                             const track = document.getElementById('heroTrack');
                                             const dotsEl = document.getElementById('heroDots');
                                             const slides = track.querySelectorAll('.hero__slide');
                                             let current = 0, timer;
 
-                                            /* Tạo dots */
                                             slides.forEach((_, i) => {
                                                 const btn = document.createElement('button');
                                                 btn.className = 'hero__dot' + (i === 0 ? ' hero__dot--active' : '');
