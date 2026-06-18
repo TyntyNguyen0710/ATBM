@@ -61,7 +61,6 @@
                                             <h1 class="page-hero__title">Tất cả tour du lịch</h1>
                                         </div>
                                     </section>
-
                                     <section class="tour-list section">
                                         <div class="container">
 
