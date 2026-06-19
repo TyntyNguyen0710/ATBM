@@ -1,170 +1,208 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-    <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-        <% String activePage="about" ; %>
-            <!DOCTYPE html>
-            <html lang="vi">
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="utf-8"%>
+<%@page import="java.util.ArrayList"%>
+<%@page import=" model.Tour"%>
+<%@page import=" dao.*"%>
+<%@page import=" DataBase.*"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="css/reset.css">
+<link rel="stylesheet" href="css/gioiThieu.css">
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+	integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+	crossorigin="anonymous" referrerpolicy="no-referrer" />
+<title>Du Lịch</title>
+</head>
+<body>
+<body>
+	<div class="header">
+		<a href="trangchu.jsp"><img class="header-logo" src="img/logo.png"></a>
+		<div class="menu-icon">
+			<i class="fa fa-bars" aria-hidden="true"></i>
+		</div>
+		<nav>
+			<ul>
+				<li><a href="trangchu.jsp">TRANG CHỦ</a></li>
+				<li><a href="gioiThieu.jsp">GIỚI THIỆU</a></li>
+				<li><a href="tour.jsp">TOUR</a></li>
+				<li><a href="kinhNghiem.jsp">KINH NGHIỆM</a></li>
 
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <meta http-equiv="Content-Security-Policy" content="default-src 'self';
-                   script-src 'self' https://cdnjs.cloudflare.com https://code.jquery.com 'unsafe-inline';
-                   style-src  'self' https://cdnjs.cloudflare.com https://fonts.googleapis.com 'unsafe-inline';
-                   font-src   'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
-                   img-src    'self' data:;
-                   connect-src 'self';">
-                <meta http-equiv="X-Content-Type-Options" content="nosniff">
-                <meta http-equiv="X-Frame-Options" content="DENY">
-                <meta name="referrer" content="strict-origin-when-cross-origin">
+				<li><a href="lienHe.jsp"> LIÊN HỆ</a></li>
+				<li><c:if test="${not empty sessionScope.username}">
+						<p class="c-welcome">
+							<a href="information.jsp ">Chào mừng,
+								${sessionScope.username}!</a>
+						</p>
+						<form action="logout" method="post">
+							<button class="c-logout-btn" type="submit">
+								<i class="fa fa-sign-in" aria-hidden="true"></i> Đăng xuất
+							</button>
+						</form>
+					</c:if> <c:if test="${empty sessionScope.username}">
+						<button class="login-btn" onclick="location.href='login.jsp'">
+							<i class="fa fa-user" aria-hidden="true"></i> Đăng nhập
+						</button>
+					</c:if></li>
 
-                <title>Giới thiệu – Travel Go</title>
+			</ul>
 
-                <link rel="stylesheet" href="css/reset.css">
-                <link rel="stylesheet" href="css/trangchu.css">
-                <link rel="stylesheet" href="css/gioiThieu.css">
-                <link rel="preconnect" href="https://fonts.googleapis.com">
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-                <link
-                    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap"
-                    rel="stylesheet">
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
-                    integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
-                    crossorigin="anonymous" referrerpolicy="no-referrer">
-            </head>
+		</nav>
+	</div>
+	</div>
+	<%
+	tourDAO td = tourDAO.getIntance();
+	ArrayList<Tour> tours = td.selectAll();
+	HttpSession Mysession = request.getSession();
+	Mysession.setAttribute("tours", tours);
+	%>
+	<div class="gioi_thieu">
+		<ul class="phan_than">
+			<li class="trai">
+				<h2>TOUR-KHÁCH SẠN HOT</h2>
+				<ul class="tour">
+					<c:forEach var="tour" items="${tours}">
+						<li class="tour_detail">
+							<ul>
+								<li class="anh"><img class="anh_tour" width="60"
+									height="60" src="img/${tour.imagePaths[0]}"></li>
+								<li class="text"><a href="showTour.jsp?tourId=${tour.id}"
+									class="ten_tour">${tour.name}</a><br> <span class="price1"><s>6.000.000VND</s></span><br>
+									<span class="price2"><fmt:setLocale value="vi_VN" /> <fmt:formatNumber
+											value="${tour.price}" /> VND</span><br></li>
+							</ul>
+						</li>
+					</c:forEach>
+				</ul>
+				<h3>BÀI VIẾT MỚI</h3>
+				<ul class="kinh_nghiem">
+					<li class="tay_bac">
+						<ul>
+							<li><img class="anh_kinh_nghiem" width="50" height="50"
+								src="img/kinhNghiemTB.jpg"></li>
+							<li><a href="tay_bac.jsp">Kinh nghiệm phượt Tây Bắc Mùa
+									Đông </a></li>
+						</ul>
+					</li>
+					<li class="da_lat">
+						<ul>
+							<li><img class="anh_kinh_nghiem" width="50" height="50"
+								src="img/kinhNghiemDL.jpg"></li>
+							<a href="da_lat.jsp">Kinh nghiệm checkin Đà Lạt mùa đông </a>
+					</li>
+				</ul>
+			</li>
+			<li class="sapa">
+				<ul>
+					<li><img class="anh_kinh_nghiem" width="50" height="50"
+						src="img/kinhNghiemSP.jpg"></li>
+					<a href="sapa.jsp">Kinh nghiệm du lịch tự túc sapa</a>
+			</li>
+		</ul>
+		</li>
+		<li class="vinh_hy">
+			<ul>
+				<li class="anh"><img class="anh_kinh_nghiem" width="50"
+					height="50" src="img/kinhNghiemVH.jpg"></li>
+				<li class="text"><a href="vinh_hy.jsp">Kinh nghiệm du lịch
+						Vĩnh Hy mùa xuân</a></li>
+			</ul>
+		</li>
+		<li class="cau_dat">
+			<ul>
+				<li class="anh"><img class="anh_kinh_nghiem" width="50"
+					height="50" src="img/kinhNghiemCD.jpg"></li>
+				<li class="text"><a href="cau_dat.jsp">Du lịch Đà Lạt đừng
+						quên ghé "check-in" đồi chè Cầu Đất </a></li>
+			</ul>
+		</li>
 
-            <body>
+		</ul>
 
-                <%@ include file="includes/navbar.jspf" %>
 
-                    <section class="page-hero" style="background-image:url('img/tongquan.png');">
-                        <div class="page-hero__overlay"></div>
-                        <div class="page-hero__content">
-                            <span class="page-hero__eyebrow">Travel Go</span>
-                            <h1 class="page-hero__title">Giới thiệu về chúng tôi</h1>
-                        </div>
-                    </section>
+		</li>
+		<!-- bên phải -->
+		<li class="phai"><img src="img/gioiThieu.jpg"><br>
+			<h1>Câu chuyện của chúng tôi</h1>
+			<p class=" cc1">VP Travel chính là một câu chuyện thành công mà
+				chúng tôi muốn chia sẻ với các bạn. VP Travel được thành lập vào năm
+				2006 bởi một cặp vợ chồng trẻ từ Ninh Thuận.Việt Pha phụ trách quản
+				lý và sản phẩm, trong khi VL nhận trách nhiệm mảng kinh doanh. Mặc
+				dù có kinh nghiệm nhiều năm làm việc tại một công ty tour du lịch
+				trước đó, , vì nhiều người sẽ nghĩ rằng 27 tuổi là quá trẻ để làm
+				chủ một doanh nghiệp.</p> <br>
+			<p class="cc2">Cũng giống như nhiều startup khác, những ngày đầu
+				tiên chúng tôi đã gặp rất nhiều khó khăn. Văn phòng thì nhỏ, các đơn
+				đặt mua đến chậm chạp, chủ yếu từ bạn bè và người thân muốn đặt vé
+				và phòng khách sạn.</p>
+			<h4>Nhận diện thương hiệu</h4>
+			<p class="cc3">Giá trị của chúng tôi là giúp việc kinh doanh của
+				công ty tiến hành một cách rất có nguyên tắc. Slogan của chúng tôi
+				là: “Experience is true value” trải nghiệm tạo nên giá trị đích
+				thực.</p>
+			<p class="cc4">Tên VP Travel xuất phát từ thực tế rằng chúng tôi
+				sẵn sàng có mặt để phục vụ bạn 24/7, 365 ngày trong 1 năm và là một
+				đối tác kinh doanh uy tín, đáng tin cậy với “Sự chăm sóc liên tục”
+				và “khiêm tốn” để chuẩn bị cho tương lai và chúng tôi luôn luôn ghi
+				nhớ rằng khách hàng và đối thủ cạnh tranh là yếu tố cần thiết để cải
+				thiện bản thân doanh nghiệp. “Ngay thẳng” có nghĩa là tính minh bạch
+				và trách nhiệm đi đôi với cảm hứng cũng như thách thức trong công
+				việc. Sống và làm việc theo những giá trị đặc biệt, chia sẻ đam mê
+				và cam kết tiếp tục phấn đấu , sẵn sàng cho những nấc thang cao hơn.
+			</p>
+			<p class="cc5">Chúng tôi hy vọng sẽ là người bạn đồng hành đáng
+				tin cậy của bạn trong tương lai!</p></li>
 
-                    <section class="story section">
-                        <div class="container">
-                            <div class="story__grid">
-                                <div class="story__text">
-                                    <span class="section-label">Câu chuyện của chúng tôi</span>
-                                    <h2 class="section-title">16 năm đồng hành cùng những chuyến đi</h2>
-                                    <div class="story__paragraphs">
-                                        <p>
-                                            Travel Go được thành lập với mong muốn mang đến cho khách hàng những
-                                            hành trình khám phá Việt Nam trọn vẹn nhất – an toàn, tiện nghi và
-                                            đáng nhớ. Từ những ngày đầu chỉ với vài tour nội địa nhỏ, chúng tôi
-                                            đã phát triển thành một trong những đơn vị tổ chức tour uy tín với
-                                            hơn 50 hành trình trải dài khắp ba miền.
-                                        </p>
-                                        <p>
-                                            Chúng tôi tin rằng <strong>sự an toàn và minh bạch thông tin</strong>
-                                            là nền tảng của mọi chuyến đi đáng nhớ. Vì vậy, mọi hợp đồng, thông
-                                            tin khách hàng và giao dịch thanh toán đều được bảo vệ bằng các tiêu
-                                            chuẩn mã hóa hiện đại, đảm bảo quyền riêng tư cho từng khách hàng.
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="story__image">
-                                    <img src="img/daLat.jpg" alt="Hành trình Travel Go">
-                                </div>
-                            </div>
+		</ul>
+	</div>
+	<div class="footer">
+		<ul class="list_footer">
+			<li class="list1">
+				<p class="p1">THÔNG TIN LIÊN HỆ</p>
+				<p class="p2">Công ty du lịch LongPhuc</p> <span class="sp1">
+					<i class="fa-solid fa-location-dot"></i> 1234 QL1K<br>Thành
+					Phố Thủ Đức,HCM
+			</span><br>
+				<p class="p3">0123 456 789</p> <a class="a1"
+				href="https://mail.google.com/mail/u/1/#inbox?compose=new"> <i
+					class="fa fa-envelope email_icon" aria-hidden="true"></i>
+					longphuc@gmail.com
+			</a>
+			</li>
+			<li class="list2">
+				<p class="p4">HỖ TRỢ TƯ VẤN</p>
+				<p class="p5">HOTLINE 0123 456 789</p> <a
+				href="https://www.facebook.com" class="fb_icon">
+					<i class="fa-brands fa-facebook" style="color: #1262ed;"></i>
+			</a> <a href="https://www.instagram.com" class="ins_icon">
+					<i class="fa-brands fa-instagram" style="color: #ec2222;"></i>
+			</a> <a href="https://mail.google.com/mail"
+				class="mail_icon"> <i class="fa-regular fa-envelope"
+					style="color: #db611f;"></i>
+			</a> <a href="https://www.tiktok.com"
+				class="tiktok_icon"> <i class="fa-brands fa-tiktok"
+					style="color: #e3e7ed;"></i>
+			</a>
+			</li>
+			<li class="list3">
+				<p class="p6">THÔNG TIN CẦN BIẾT</p> <a class="a2"
+				href="trangchu.jsp">Điều kiện điều khoản</a><br> <a class="a3"
+				href="trangchu.jsp">Phương thức thanh toán</a><br> <a
+				class="a4" href="trangchu.jsp">Bảo mật thông tin khách hàng</a><br>
+				<a class="a5" href="trangchu.jsp">Chính sách quy định</a><br>
 
-                            <div class="story__stats">
-                                <div class="story__stat">
-                                    <span class="story__stat-num">16+</span>
-                                    <span class="story__stat-label">Năm kinh nghiệm</span>
-                                </div>
-                                <div class="story__stat">
-                                    <span class="story__stat-num">50+</span>
-                                    <span class="story__stat-label">Tour trong nước</span>
-                                </div>
-                                <div class="story__stat">
-                                    <span class="story__stat-num">20K+</span>
-                                    <span class="story__stat-label">Khách hàng tin tưởng</span>
-                                </div>
-                                <div class="story__stat">
-                                    <span class="story__stat-num">4.8/5</span>
-                                    <span class="story__stat-label">Đánh giá trung bình</span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="values section section--alt">
-                        <div class="container">
-                            <span class="section-label">Giá trị cốt lõi</span>
-                            <h2 class="section-title">Điều làm nên Travel Go</h2>
-
-                            <div class="values__grid">
-                                <div class="value-card">
-                                    <div class="value-card__icon"><i class="fa fa-shield-halved"></i></div>
-                                    <h3 class="value-card__title">An toàn là ưu tiên số một</h3>
-                                    <p class="value-card__desc">
-                                        Mọi tour đều được kiểm định kỹ về an toàn giao thông, lưu trú và bảo
-                                        hiểm du lịch trước khi đưa vào vận hành.
-                                    </p>
-                                </div>
-                                <div class="value-card">
-                                    <div class="value-card__icon"><i class="fa fa-lock"></i></div>
-                                    <h3 class="value-card__title">Bảo mật thông tin khách hàng</h3>
-                                    <p class="value-card__desc">
-                                        Dữ liệu cá nhân và hợp đồng của khách hàng được mã hóa, chỉ những
-                                        nhân sự được phân quyền mới có thể truy cập.
-                                    </p>
-                                </div>
-                                <div class="value-card">
-                                    <div class="value-card__icon"><i class="fa fa-handshake"></i></div>
-                                    <h3 class="value-card__title">Minh bạch trong từng hợp đồng</h3>
-                                    <p class="value-card__desc">
-                                        Giá tour, điều khoản hủy/đổi và chính sách hoàn tiền được nêu rõ
-                                        ràng, không phụ phí ẩn.
-                                    </p>
-                                </div>
-                                <div class="value-card">
-                                    <div class="value-card__icon"><i class="fa fa-heart"></i></div>
-                                    <h3 class="value-card__title">Tận tâm với từng khách hàng</h3>
-                                    <p class="value-card__desc">
-                                        Đội ngũ tư vấn luôn đồng hành 24/7, hỗ trợ kịp thời trong suốt
-                                        hành trình của bạn.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="team section">
-                        <div class="container">
-                            <span class="section-label">Đội ngũ</span>
-                            <h2 class="section-title">Những người đồng hành cùng bạn</h2>
-
-                            <div class="team__grid">
-                                <div class="team-card">
-                                    <div class="team-card__avatar"><i class="fa fa-user-tie"></i></div>
-                                    <p class="team-card__name">Nguyễn Văn Long</p>
-                                    <p class="team-card__role">Giám đốc điều hành</p>
-                                </div>
-                                <div class="team-card">
-                                    <div class="team-card__avatar"><i class="fa fa-user-tie"></i></div>
-                                    <p class="team-card__name">Trần Thị Phúc</p>
-                                    <p class="team-card__role">Trưởng phòng Tư vấn tour</p>
-                                </div>
-                                <div class="team-card">
-                                    <div class="team-card__avatar"><i class="fa fa-user-shield"></i></div>
-                                    <p class="team-card__name">Lê Minh An</p>
-                                    <p class="team-card__role">Trưởng phòng Bảo mật &amp; Dữ liệu</p>
-                                </div>
-                                <div class="team-card">
-                                    <div class="team-card__avatar"><i class="fa fa-user-tie"></i></div>
-                                    <p class="team-card__name">Phạm Thu Hà</p>
-                                    <p class="team-card__role">Trưởng phòng Chăm sóc khách hàng</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <%@ include file="includes/footer.jspf" %>
-            </body>
-
-            </html>
+			</li>
+		</ul>
+		<div class="text_footer">
+			<span class="sp2">Bản quyền thuộc về Du Lịch | Thiết kế bởi </span><span
+				class="sp3">VPVL</span>
+		</div>
+	</div>
+</body>
+</html>
