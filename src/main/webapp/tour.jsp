@@ -1,139 +1,147 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-    <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-        <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-            <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-                <%@ page import="java.util.ArrayList" %>
-                    <% String activePage="tour" ; /* Trang Tour tự truy vấn DB, KHÔNG phụ thuộc vào session "tours" được
-                        set từ trangchu.jsp (khác với bản gốc) — để trang này có thể chạy độc lập nếu người dùng vào
-                        trực tiếp /tour.jsp. */ dao.tourDAO td=dao.tourDAO.getIntance(); ArrayList<model.Tour> tours =
-                        new ArrayList<model.Tour>();
-                            String errorMsg = null;
-                            try {
-                            tours = td.selectAll();
-                            } catch (Exception e) {
-                            errorMsg = "Không thể tải danh sách tour lúc này. Vui lòng thử lại sau.";
-                            // Không in stacktrace ra response (an toàn) — chỉ log phía server.
-                            e.printStackTrace();
-                            }
-                            pageContext.setAttribute("tours", tours);
-                            pageContext.setAttribute("errorMsg", errorMsg);
-                            %>
-                            <!DOCTYPE html>
-                            <html lang="vi">
+<%@page import="java.util.ArrayList"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@page import=" model.Tour"%>
+<%@page import=" dao.*"%>
+<%@page import=" DataBase.*"%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="css/reset.css">
+<link rel="stylesheet" href="css/tour.css">
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+	integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+	crossorigin="anonymous" referrerpolicy="no-referrer" />
+<title>Du Lịch</title>
+</head>
+<body>
+	<div class="header">
+		<a href="trangchu.jsp"><img class="header-logo" src="img/logo.png"></a>
+		<div class="menu-icon">
+			<i class="fa fa-bars" aria-hidden="true"></i>
+		</div>
+		<nav>
+			<ul>
+				<li><a href="trangchu.jsp">TRANG CHỦ</a></li>
+				<li><a href="gioiThieu.jsp">GIỚI THIỆU</a></li>
+				<li><a href="tour.jsp">TOUR</a></li>
+				<li><a href="kinhNghiem.jsp">KINH NGHIỆM</a></li>
 
-                            <head>
-                                <meta charset="UTF-8">
-                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                                <meta http-equiv="Content-Security-Policy" content="default-src 'self';
-                   script-src 'self' https://cdnjs.cloudflare.com https://code.jquery.com 'unsafe-inline';
-                   style-src  'self' https://cdnjs.cloudflare.com https://fonts.googleapis.com 'unsafe-inline';
-                   font-src   'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
-                   img-src    'self' data:;
-                   connect-src 'self';">
-                                <meta http-equiv="X-Content-Type-Options" content="nosniff">
-                                <meta http-equiv="X-Frame-Options" content="DENY">
-                                <meta name="referrer" content="strict-origin-when-cross-origin">
+				<li><a href="lienHe.jsp"> LIÊN HỆ</a></li>
+				<li><c:if test="${not empty sessionScope.username}">
+						<p class="c-welcome">
+							<a href="information.jsp ">Chào mừng,
+								${sessionScope.username}!</a>
+						</p>
+						<form action="logout" method="post">
+							<button class="c-logout-btn" type="submit">
+								<i class="fa fa-sign-in" aria-hidden="true"></i> Đăng xuất
+							</button>
+						</form>
+					</c:if> <c:if test="${empty sessionScope.username}">
+						<button class="login-btn" onclick="location.href='login.jsp'">
+							<i class="fa fa-user" aria-hidden="true"></i> Đăng nhập
+						</button>
+					</c:if></li>
 
-                                <title>Tất cả Tour – Travel Go</title>
+			</ul>
+		</nav>
+	</div>
+	</div>
+	<div class="tour">
+		<h4>TẤT CẢ CÁC TOUR</h4>
+		<div class="container_tour">
+			<table>
+				<c:forEach var="tour" items="${tours}" varStatus="loopStatus">
+					<c:if test="${loopStatus.index % 3 == 0}">
+						<tr>
+					</c:if>
 
-                                <link rel="stylesheet" href="css/reset.css">
-                                <link rel="stylesheet" href="css/trangchu.css">
-                                <link rel="stylesheet" href="css/tour.css">
-                                <link rel="preconnect" href="https://fonts.googleapis.com">
-                                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-                                <link
-                                    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap"
-                                    rel="stylesheet">
-                                <link rel="stylesheet"
-                                    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
-                                    integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
-                                    crossorigin="anonymous" referrerpolicy="no-referrer">
-                            </head>
+					<td>
+						<div class="box_tour">
+							<div class="tour-highlight">
 
-                            <body>
+								<img class="anh_tour" width="365" height="296"
+									src="img/${tour.imagePaths[0]}">
 
-                                <%@ include file="includes/navbar.jspf" %>
+								<c:if
+									test="${tour.id==1 or tour.id==5 or tour.id==7 or tour.id==9}">
 
-                                    <section class="page-hero" style="background-image:url('img/sonLa.jpg');">
-                                        <div class="page-hero__overlay"></div>
-                                        <div class="page-hero__content">
-                                            <span class="page-hero__eyebrow">Travel Go</span>
-                                            <h1 class="page-hero__title">Tất cả tour du lịch</h1>
-                                        </div>
-                                    </section>
-                                    <section class="tour-list section">
-                                        <div class="container">
+									<div class="highlight-text">
+										<span class="noi_bat">Nổi Bật</span>
+									</div>
+								</c:if>
+								<a class="ngaydi" href="showTour.jsp?tourId=${tour.id}">${tour.name}</a><br>
+								<i class="fa fa-plane icon_tour" aria-hidden="true"></i> <span>${tour.duration }</span><br>
+								<i class="fa fa-calendar icon_tour" aria-hidden="true"></i> <span>${tour.schedule }</span><br>
+								<p class="price">
+									<fmt:setLocale value="vi_VN" />
+									<fmt:formatNumber value="${tour.price}" />
+									VND
+								</p>
+								<a class="chi_tiet_tour" href="showTour.jsp?tourId=${tour.id}">XEM
+									CHI TIẾT</a>
+							</div>
+						</div>
+					</td>
 
-                                            <c:if test="${empty errorMsg}">
-                                                <div class="tour-list__toolbar">
-                                                    <span class="section-label">Khám phá</span>
-                                                    <h2 class="section-title" style="margin-bottom:8px;">Tất cả tour
-                                                        hiện có</h2>
-                                                    <p class="tour-list__count">${fn:length(tours)} tour đang mở bán</p>
-                                                </div>
-                                            </c:if>
+					<c:if test="${(loopStatus.index + 1) % 3 == 0 or loopStatus.last}">
+						</tr>
+					</c:if>
+				</c:forEach>
+			</table>
+		</div>
+	</div>
+	<div class="footer">
+		<ul class="list_footer">
+			<li class="list1">
+				<p class="p1">THÔNG TIN LIÊN HỆ</p>
+				<p class="p2">Công ty du lịch LongPhuc</p> <span class="sp1">
+					<i class="fa-solid fa-location-dot"></i> 1234 QL1K<br>Thành
+					Phố Thủ Đức,HCM.
+			</span><br>
+				<p class="p3">0123 456 789</p> <a class="a1"
+				href="https://mail.google.com/mail"> <i
+					class="fa fa-envelope email_icon" aria-hidden="true"></i>
+					longphuc@gmail.com
+			</a>
+			</li>
+			<li class="list2">
+				<p class="p4">HỖ TRỢ TƯ VẤN</p>
+				<p class="p5">HOTLINE 0123 456 789</p> <a
+				href="https://www.facebook.com" class="fb_icon">
+					<i class="fa-brands fa-facebook" style="color: #1262ed;"></i>
+			</a> <a href="https://www.instagram.com" class="ins_icon">
+					<i class="fa-brands fa-instagram" style="color: #ec2222;"></i>
+			</a> <a href="https://mail.google.com/mail"
+				class="mail_icon"> <i class="fa-regular fa-envelope"
+					style="color: #db611f;"></i>
+			</a> <a href="https://www.tiktok.com"
+				class="tiktok_icon"> <i class="fa-brands fa-tiktok"
+					style="color: #e3e7ed;"></i>
+			</a>
+			</li>
+			<li class="list3">
+				<p class="p6">THÔNG TIN CẦN BIẾT</p> <a class="a2"
+				href="trangchu.jsp">Điều kiện điều khoản</a><br> <a class="a3"
+				href="trangchu.jsp">Phương thức thanh toán</a><br> <a
+				class="a4" href="trangchu.jsp">Bảo mật thông tin khách hàng</a><br>
+				<a class="a5" href="trangchu.jsp">Chính sách quy định</a><br>
 
-                                            <c:if test="${not empty errorMsg}">
-                                                <div class="tour-list__empty">
-                                                    <div class="tour-list__empty-icon"><i
-                                                            class="fa fa-triangle-exclamation"></i></div>
-                                                    <p class="tour-list__empty-text">${fn:escapeXml(errorMsg)}</p>
-                                                </div>
-                                            </c:if>
+			</li>
+		</ul>
 
-                                            <c:if test="${empty errorMsg and fn:length(tours) == 0}">
-                                                <div class="tour-list__empty">
-                                                    <div class="tour-list__empty-icon"><i class="fa fa-map"></i></div>
-                                                    <p class="tour-list__empty-text">Hiện chưa có tour nào được mở bán.
-                                                    </p>
-                                                </div>
-                                            </c:if>
-
-                                            <c:if test="${empty errorMsg and fn:length(tours) > 0}">
-                                                <div class="tour-grid">
-                                                    <c:forEach var="tour" items="${tours}">
-                                                        <article class="tour-card">
-                                                            <div class="tour-card__img-wrap">
-                                                                <img class="tour-card__img"
-                                                                    src="img/${tour.imagePaths[0]}"
-                                                                    alt="${fn:escapeXml(tour.name)}" loading="lazy">
-                                                                <c:if
-                                                                    test="${tour.id == 1 or tour.id == 5 or tour.id == 7 or tour.id == 9}">
-                                                                    <span class="tour-card__badge">Nổi bật</span>
-                                                                </c:if>
-                                                            </div>
-                                                            <div class="tour-card__body">
-                                                                <a class="tour-card__name"
-                                                                    href="showTour.jsp?tourId=${tour.id}">
-                                                                    ${fn:escapeXml(tour.name)}
-                                                                </a>
-                                                                <ul class="tour-card__meta">
-                                                                    <li class="tour-card__meta-item">
-                                                                        <i class="fa fa-clock"></i>
-                                                                        <span>${fn:escapeXml(tour.duration)}</span>
-                                                                    </li>
-                                                                    <li class="tour-card__meta-item">
-                                                                        <i class="fa fa-calendar-days"></i>
-                                                                        <span>${fn:escapeXml(tour.schedule)}</span>
-                                                                    </li>
-                                                                </ul>
-                                                                <div class="tour-card__price">
-                                                                    <fmt:setLocale value="vi_VN" />
-                                                                    <fmt:formatNumber value="${tour.price}" /> VNĐ
-                                                                </div>
-                                                                <a class="tour-card__cta"
-                                                                    href="showTour.jsp?tourId=${tour.id}">
-                                                                    Xem chi tiết <i class="fa fa-arrow-right"></i>
-                                                                </a>
-                                                            </div>
-                                                        </article>
-                                                    </c:forEach>
-                                                </div>
-                                            </c:if>
-
-                                        </div>
-                                    </section>
-                                    <%@ include file="includes/footer.jspf" %>
-                            </body>
-
-                            </html>
+		<div class="text_footer">
+			<span class="sp2">Bản quyền thuộc về Du Lịch | Thiết kế bởi </span><span
+				class="sp3">VPVL</span>
+		</div>
+	</div>
+</body>
+</html>

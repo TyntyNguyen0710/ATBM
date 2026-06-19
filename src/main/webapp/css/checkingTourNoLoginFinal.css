@@ -1,0 +1,68 @@
+@charset "UTF-8";
+
+body {
+	font-family: 'Arial', sans-serif;
+	background-color: #f8f9fa;
+}
+
+.container {
+	margin-top: 50px;
+}
+
+.card {
+	border: none;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	margin-bottom: 20px;
+}
+
+.card-header {
+	background-color: #007bff;
+	color: #fff;
+	text-align: center;
+	font-size: 24px;
+	font-weight: bold;
+}
+
+.card-body {
+	padding: 30px;
+}
+
+.info-label {
+	font-weight: bold;
+}
+
+.info-value {
+	margin-bottom: 20px;
+}
+
+.no-booking-message {
+	margin-top: 20px;
+	color: #dc3545;
+	font-weight: bold;
+}
+
+header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background-color: #fff;
+	color: white;
+	padding: 15px;
+	max-height: 70px;
+}
+
+#logo {
+	width: 150px;
+	height: 60px;
+	display: block;
+	margin-left: 60px;
+	margin-top: 10px;
+}
+
+.cancel-info {
+	margin-top: 20px;
+	color: #007bff;
+	font-weight: bold;
+	text-align: center;
+	font-size: 19px;
+}
