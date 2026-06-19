@@ -1,0 +1,79 @@
+@charset "UTF-8";
+
+body {
+	font-family: Arial;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100vh;
+	margin: 0;
+	background-color: #f4f4f4;
+}
+
+.login-container {
+	background-color: #ffffff;
+	border: 1px solid #dddddd;
+	padding: 30px;
+	border-radius: 5px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	width: 300px;
+	text-align: left; /* Căn trái nội dung trong container */
+}
+
+.login-form {
+	display: flex;
+	flex-direction: column;
+}
+
+.form-group {
+	margin-bottom: 20px;
+}
+
+.form-group label {
+	margin-bottom: 8px;
+	font-weight: bold;
+	color: #333;
+}
+
+.form-group input {
+	width: 100%;
+	padding: 10px;
+	box-sizing: border-box;
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	font-size: 16px;
+}
+
+.form-group button {
+	padding: 12px;
+	background-color: #4caf50;
+	color: #ffffff;
+	border: none;
+	border-radius: 3px;
+	cursor: pointer;
+	font-size: 16px;
+}
+
+.form-group button:hover {
+	background-color: #45a049;
+}
+
+.create-account {
+	text-align: center;
+	margin-top: 10px;
+}
+
+.create-account a {
+	color: #3498db;
+	text-decoration: none;
+}
+
+.create-account a:hover {
+	text-decoration: underline;
+}
+
+h1 {
+	text-align: center;
+	margin-bottom: 20px;
+	color: #333;
+}
