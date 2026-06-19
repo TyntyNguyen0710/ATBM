@@ -133,7 +133,6 @@
 
                                         </div>
                                     </section>
-
                                     <%@ include file="includes/footer.jspf" %>
                             </body>
 
