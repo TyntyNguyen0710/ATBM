@@ -158,7 +158,6 @@ public class userDAO implements DAOInterface<User> {
 		return user;
 	}
 
-
 	public int updatePassword(String username, String password) throws ClassNotFoundException {
 		int result = 0;
 		Connection connection = JDBCUltil.getConnection();
