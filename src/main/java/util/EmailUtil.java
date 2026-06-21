@@ -12,23 +12,13 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import java.util.Properties;
 
-/**
- * Gửi email — credential đọc từ biến môi trường (MAIL_USER, MAIL_PASS),
- * KHÔNG hardcode trong source code.
- *
- * BẢN MỞ RỘNG: thêm 2 hàm dùng cho CreateAccountServlet và
- * ChangePasswordAfterLoginServlet (trước đây 2 servlet này tự định
- * nghĩa lại toàn bộ logic gửi mail + hardcode credential riêng —
- * nay dùng chung 1 nơi để dễ bảo trì và đảm bảo không sót chỗ nào còn
- * hardcode).
- */
 public final class EmailUtil {
 
     private EmailUtil() {
     }
 
     public static void sendSignedInvoiceEmail(String toEmail, String customerName, Tour tour,
-                                                Booking booking, String invoiceHash, String signatureBase64) {
+            Booking booking, String invoiceHash, String signatureBase64) {
         String body = "Kính gửi " + customerName + ",\n\n"
                 + "Hợp đồng đặt tour \"" + tour.getName() + "\" đã được ký số thành công.\n\n"
                 + "=== HASH HÓA ĐƠN (SHA-256) ===\n" + invoiceHash + "\n\n"
@@ -48,7 +38,8 @@ public final class EmailUtil {
 
     public static void sendPasswordChangedEmail(String toEmail, String username) {
         if (toEmail == null) {
-            System.err.println("[EmailUtil] Không gửi được email đổi mật khẩu — thiếu địa chỉ email cho user: " + username);
+            System.err.println(
+                    "[EmailUtil] Không gửi được email đổi mật khẩu — thiếu địa chỉ email cho user: " + username);
             return;
         }
         String body = "Mật khẩu của tài khoản \"" + username + "\" vừa được thay đổi thành công.\n\n"
@@ -57,7 +48,10 @@ public final class EmailUtil {
         send(toEmail, "Xác nhận thay đổi mật khẩu", body);
     }
 
-    /** Hàm dùng chung — đọc credential từ biến môi trường, gửi email đơn giản dạng text. */
+    /**
+     * Hàm dùng chung — đọc credential từ biến môi trường, gửi email đơn giản dạng
+     * text.
+     */
     private static void send(String toEmail, String subject, String body) {
         String from = System.getenv("MAIL_USER");
         String password = System.getenv("MAIL_PASS");
@@ -89,8 +83,6 @@ public final class EmailUtil {
             Transport.send(message);
 
         } catch (MessagingException e) {
-            // Log lỗi gửi mail, không ném ra ngoài làm fail toàn bộ luồng nghiệp vụ
-            // chính (đăng ký / đổi mật khẩu / ký số vẫn nên thành công dù gửi email lỗi).
             System.err.println("[EmailUtil] Gửi email thất bại: " + e.getMessage());
         }
     }
