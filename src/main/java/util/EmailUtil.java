@@ -90,7 +90,7 @@ public final class EmailUtil {
 
         } catch (MessagingException e) {
             // Log lỗi gửi mail, không ném ra ngoài làm fail toàn bộ luồng nghiệp vụ
-            // chính (đăng ký / đổi mật khẩu vẫn nên thành công dù gửi email lỗi).
+            // chính (đăng ký / đổi mật khẩu / ký số vẫn nên thành công dù gửi email lỗi).
             System.err.println("[EmailUtil] Gửi email thất bại: " + e.getMessage());
         }
     }

@@ -18,8 +18,8 @@ public class AdminAccessFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-    	response.setContentType("text/html;charset=UTF-8");
-		request.setCharacterEncoding("UTF-8");
+        response.setContentType("text/html;charset=UTF-8");
+        request.setCharacterEncoding("UTF-8");
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         HttpSession session = httpRequest.getSession();
@@ -33,10 +33,10 @@ public class AdminAccessFilter implements Filter {
     }
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException { //Không cần thiết
+    public void init(FilterConfig filterConfig) throws ServletException { // Không cần thiết
     }
 
     @Override
-    public void destroy() { //Không cần thiết
+    public void destroy() { // Không cần thiết
     }
 }
