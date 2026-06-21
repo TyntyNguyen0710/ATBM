@@ -1,16 +1,6 @@
 package Controller;
 
 import java.io.IOException;
-import javax.mail.Authenticator;
-import javax.mail.PasswordAuthentication;
-import java.util.Properties;
-
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -20,110 +10,80 @@ import javax.servlet.http.HttpSession;
 
 import dao.customerDAO;
 import dao.userDAO;
-import model.User; // Thay thế bằng lớp User của bạn
+import model.User;
+import util.EmailUtil;
+import util.PasswordUtil;
 
+/**
+ * THAY ĐỔI BẢO MẬT so với bản gốc:
+ *
+ *  1) So khớp mật khẩu hiện tại bằng PasswordUtil.verifyPassword()
+ *     (BCrypt), KHÔNG dùng user.getPassword().equals(currentPassword)
+ *     nữa — phép so sánh "==" / equals() trực tiếp với hash KHÔNG BAO
+ *     GIỜ đúng (hash không thể so sánh kiểu chuỗi thường).
+ *
+ *  2) Mật khẩu MỚI được hash bằng PasswordUtil.hashPassword() trước
+ *     khi gọi updatePassword() — đây là chỗ thứ 2 (ngoài đăng ký) có
+ *     thể sinh ra plain text nếu không sửa, nay đã được chặn.
+ *
+ *  3) Credential email chuyển sang EmailUtil đọc từ biến môi trường.
+ */
 @WebServlet("/ChangePasswordAfterLogin")
 public class ChangePasswordAfterLoginServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-		response.setContentType("text/html;charset=UTF-8");
-		request.setCharacterEncoding("UTF-8");
-		// Lấy thông tin người dùng từ session hoặc database
-		HttpSession session = request.getSession();
-		String username = (String) session.getAttribute("username"); // Thay thế bằng đối tượng User của bạn
-		User user = null;
-		try {
-			user = userDAO.getIntance().selectByID(username);
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		if (username != null) {
-			// Lấy mật khẩu hiện tại từ biểu mẫu
-			String currentPassword = request.getParameter("currentPassword");
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType("text/html;charset=UTF-8");
+        request.setCharacterEncoding("UTF-8");
 
-			// Kiểm tra xem mật khẩu hiện tại có khớp với mật khẩu trong database không
-			if (user.getPassword().equals(currentPassword)) {
-				// Lấy mật khẩu mới và xác nhận mật khẩu mới từ biểu mẫu
-				String newPassword = request.getParameter("newPassword");
-				String confirmPassword = request.getParameter("confirmPassword");
+        HttpSession session = request.getSession();
+        String username = (String) session.getAttribute("username");
 
-				// Kiểm tra xem mật khẩu mới và xác nhận mật khẩu mới có khớp nhau không
-				if (newPassword.equals(confirmPassword)) {
-					try {
-						userDAO.getIntance().updatePassword(username, newPassword);
-					} catch (ClassNotFoundException e) {
-						e.printStackTrace();
-					}
+        if (username == null) {
+            response.sendRedirect("login.jsp");
+            return;
+        }
 
-					// Hiển thị thông báo đổi mật khẩu thành công và chuyển hướng người dùng
-					response.sendRedirect("login.jsp");
-					try {
-						sendConfirmationEmail(username);
-					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				} else {
-					// Hiển thị thông báo lỗi khi mật khẩu mới và xác nhận không khớp
-					response.sendRedirect("changePasswordMismatched.jsp");
-				}
-			} else {
-				// Hiển thị thông báo lỗi khi mật khẩu hiện tại không chính xác
-				response.sendRedirect("changePasswordIncorrect.jsp");
-			}
-		} else {
-			// Hiển thị thông báo lỗi khi không tìm thấy thông tin người dùng trong session
-			response.sendRedirect("login.jsp"); // Hoặc chuyển hướng đến trang đăng nhập
-		}
-	}
+        try {
+            User user = userDAO.getIntance().selectByID(username);
+            if (user == null) {
+                response.sendRedirect("login.jsp");
+                return;
+            }
 
-	private void sendConfirmationEmail(String username) throws ClassNotFoundException {
-		// Cài đặt thông tin của email
-		String to = customerDAO.getIntance().selectEmailByUsername(username); // Thay thế bằng địa chỉ email của người
-																				// dùng
-		String subject = "Xác nhận thay đổi mật khẩu";
-		String body = "Mật khẩu của tài khoản " + username + " đã được thay đổi thành công.";
+            String currentPassword = request.getParameter("currentPassword");
+            String newPassword     = request.getParameter("newPassword");
+            String confirmPassword = request.getParameter("confirmPassword");
 
-		// Cài đặt thông tin của tài khoản email gửi
-		final String from = "philong2m@gmail.com";
-		final String password = "nqjk dbbg ilbi faaf";
+            // ── So khớp mật khẩu hiện tại bằng BCrypt, không equals() trực tiếp ──
+            boolean currentPasswordCorrect = PasswordUtil.isBcryptHash(user.getPassword())
+                    ? PasswordUtil.verifyPassword(currentPassword, user.getPassword())
+                    : user.getPassword().equals(currentPassword); // hỗ trợ user cũ chưa migrate
 
-		// Cài đặt thông tin của máy chủ SMTP
-		Properties properties = new Properties();
-		properties.put("mail.smtp.host", "smtp.gmail.com");
-		properties.put("mail.smtp.port", "587");
-		properties.put("mail.smtp.auth", "true");
-		properties.put("mail.smtp.starttls.enable", "true");
+            if (!currentPasswordCorrect) {
+                response.sendRedirect("changePasswordIncorrect.jsp");
+                return;
+            }
 
-		// Xác thực bằng tài khoản email gửi
-		Authenticator authenticator = new Authenticator() {
-			@Override
-			protected PasswordAuthentication getPasswordAuthentication() {
-				return new PasswordAuthentication(from, password);
-			}
-		};
+            if (newPassword == null || !newPassword.equals(confirmPassword)) {
+                response.sendRedirect("changePasswordMismatched.jsp");
+                return;
+            }
 
-		// Tạo phiên làm việc
-		Session session = Session.getInstance(properties, authenticator);
+            // ── Hash mật khẩu MỚI trước khi lưu ──
+            String newHashedPassword = PasswordUtil.hashPassword(newPassword);
+            userDAO.getIntance().updatePassword(username, newHashedPassword);
 
-		try {
-			// Tạo đối tượng MimeMessage
-			MimeMessage message = new MimeMessage(session);
+            String email = customerDAO.getIntance().selectEmailByUsername(username);
+            EmailUtil.sendPasswordChangedEmail(email, username);
 
-			// Đặt thông tin người gửi, người nhận và tiêu đề
-			message.setFrom(new InternetAddress(from));
-			message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
-			message.setSubject(subject);
+            response.sendRedirect("login.jsp");
 
-			// Đặt nội dung của email
-			message.setText(body);
-
-			// Gửi email
-			Transport.send(message);
-		} catch (MessagingException e) {
-			e.printStackTrace();
-		}
-	}
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            response.sendRedirect("login.jsp");
+        }
+    }
 }
