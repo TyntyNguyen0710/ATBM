@@ -13,9 +13,17 @@ public class Customer {
 	private String email;
 	private String phone;
 	private User user;
+	private String publicKey;
 	public Customer() {
 	}
 
+	public String getPublicKey() {
+		return publicKey;
+	}
+
+	public void setPublicKey(String publicKey) {
+		this.publicKey = publicKey;
+}
 	public Customer(String name, String address, String email, String phone) {
 		super();
 		this.name = name;

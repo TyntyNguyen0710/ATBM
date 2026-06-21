@@ -1,5 +1,6 @@
 Controller\ChangePasswordServlet$1.class
 Controller\LoginServlet.class
+Controller\KeyManagementServlet.class
 Filter\AuthenticationFilter.class
 Filter\AdminAccessFilter.class
 Filter\ChangeInformationFilter.class

@@ -12,7 +12,54 @@ public class customerDAO implements DAOInterface<Customer> {
 	public static customerDAO getIntance() {
 		return new customerDAO();
 	}
+	// Cập nhật Public Key cho khách hàng
+public int updatePublicKey(int customerId, String publicKey) {
+    int result = 0;
+    Connection con = null;
+    PreparedStatement pst = null;
 
+    try {
+        con = JDBCUltil.getConnection();
+        String sql = "UPDATE Customer SET publicKey = ? WHERE id = ?";
+        pst = con.prepareStatement(sql);
+        pst.setString(1, publicKey);
+        pst.setInt(2, customerId);
+        result = pst.executeUpdate();
+    } catch (Exception e) {
+        e.printStackTrace();
+    } finally {
+        JDBCUltil.closePreparedStatement(pst);
+        JDBCUltil.closeConnection(con);
+    }
+    return result;
+}
+
+// Lấy Public Key theo username
+public String getPublicKeyByUsername(String username) {
+    String publicKey = null;
+    Connection con = null;
+    PreparedStatement pst = null;
+    ResultSet rs = null;
+
+    try {
+        con = JDBCUltil.getConnection();
+        String sql = "SELECT c.publicKey FROM Customer c JOIN [User] u ON c.userId = u.id WHERE u.username = ?";
+        pst = con.prepareStatement(sql);
+        pst.setString(1, username);
+        rs = pst.executeQuery();
+
+        if (rs.next()) {
+            publicKey = rs.getString("publicKey");
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    } finally {
+        JDBCUltil.closeResultSet(rs);
+        JDBCUltil.closePreparedStatement(pst);
+        JDBCUltil.closeConnection(con);
+    }
+    return publicKey;
+}
 	public int insert(Customer customer) throws ClassNotFoundException {
 		int result = 0;
 		Connection connection = null;
@@ -21,7 +68,6 @@ public class customerDAO implements DAOInterface<Customer> {
 		try {
 			connection = JDBCUltil.getConnection();
 
-			// Check if the username exists in the Users table
 			if (usernameExists(connection, customer.getUser().getUsername())) {
 				String sql = "INSERT INTO Customer (name, address, email, phone, username,role) VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -33,14 +79,12 @@ public class customerDAO implements DAOInterface<Customer> {
 				preparedStatement.setString(5, customer.getUser().getUsername());
 				preparedStatement.setString(6, "Customer");
 
-				// Execute the insert
 				result = preparedStatement.executeUpdate();
 			} else {
-				// Handle the case where the username does not exist
 				System.err.println("Error: Username does not exist in the Users table.");
 			}
 		} catch (SQLException e) {
-			e.printStackTrace(); // Handle the exception based on your application's needs
+			e.printStackTrace(); 
 		} finally {
 			JDBCUltil.closePreparedStatement(preparedStatement);
 			JDBCUltil.closeConnection(connection);
