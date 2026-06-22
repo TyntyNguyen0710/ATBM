@@ -9,6 +9,7 @@ Controller\SendOTPViaForgetPasswordServlet.class
 Controller\DeleteBookingServlet$1.class
 Filter\BookingInfoNoLoginFilter.class
 Controller\ChangePasswordServlet.class
+Controller\GenerateSignatureServlet$1.class
 Controller\SaveBookingServlet.class
 model\Tour.class
 model\Customer.class
@@ -25,6 +26,7 @@ Filter\ChangePasswordFilter.class
 Controller\SendOTPViaForgetPasswordServlet$1.class
 Controller\VerifyOTPTourServlet.class
 Controller\VerifyOTPForgetPasswordServlet.class
+Controller\GenerateSignatureServlet.class
 util\EmailUtil$1.class
 Filter\OTPTourConfirmationFilterRegain.class
 Controller\SendOTPViaEmailServlet.class
