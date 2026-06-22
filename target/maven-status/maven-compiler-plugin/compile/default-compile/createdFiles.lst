@@ -25,7 +25,6 @@ Controller\logoutServlet.class
 Filter\OTPConfirmationAccess.class
 Filter\ChangePasswordFilter.class
 Controller\SendOTPViaForgetPasswordServlet$1.class
-Controller\SaveBookingServlet$1.class
 Controller\VerifyOTPTourServlet.class
 Controller\VerifyOTPForgetPasswordServlet.class
 Controller\GenerateSignatureServlet.class

@@ -12,6 +12,15 @@ public class Booking {
 	private String email;
 	private int tourID;
 	private int customerID;
+	private String signature;
+
+	public String getSignature() {
+    	return signature;
+	}
+
+	public void setSignature(String signature) {
+		this.signature = signature;
+	}
 
 	public Booking(Customer customer, Date departureDate, int noAdults, int noChildren, String email, int tourID,
 			int customerID) {

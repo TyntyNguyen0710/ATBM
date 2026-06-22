@@ -17,13 +17,17 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 @WebServlet("/GenerateSignatureServlet")
@@ -35,15 +39,9 @@ public class GenerateSignatureServlet extends HttpServlet {
         String invoiceHash = request.getParameter("invoiceHash");
         String privateKeyBase64 = request.getParameter("privateKeyPem");
         String bookingIdStr = request.getParameter("bookingId");
+        String publicKeyInput = request.getParameter("publicKey");
 
         try {
-            // Load Private Key
-            PrivateKey privateKey = loadPrivateKeyFromBase64(privateKeyBase64);
-
-            // Mã hóa hash theo đúng logic RSA.java (Hybrid RSA + AES)
-            String encryptedResult = encryptWithPrivateKey(invoiceHash, privateKey);
-
-            // Lấy thông tin booking
             int bookingId = Integer.parseInt(bookingIdStr);
             Booking booking = bookingDAO.getIntance().selectByBookingId(bookingId);
 
@@ -55,11 +53,33 @@ public class GenerateSignatureServlet extends HttpServlet {
             Customer customer = customerDAO.getIntance().selectByEmail(booking.getEmail());
             Tour tour = tourDAO.getIntance().selectByID(String.valueOf(booking.getTourID()));
 
-            // Gửi email
+            String publicKeyBase64 = customerDAO.getIntance().getActivePublicKey(customer.getID());
+            if (publicKeyBase64 == null || publicKeyBase64.trim().isEmpty()) {
+                publicKeyBase64 = publicKeyInput;
+            }
+
+            PrivateKey privateKey = loadPrivateKeyFromBase64(privateKeyBase64);
+            String encryptedResult = encryptWithPrivateKey(invoiceHash, privateKey);
+
+            boolean isValid = verifySignature(invoiceHash, encryptedResult, publicKeyBase64);
+
+            if (!isValid) {
+                request.setAttribute("signatureError", "Chữ ký không hợp lệ!");
+                request.setAttribute("activePublicKey", publicKeyBase64);   // ← Thêm dòng này
+                request.setAttribute("invoiceHash", invoiceHash);
+                request.setAttribute("booking", booking);
+                request.setAttribute("tour", tour);
+                request.setAttribute("customer", customer);
+                request.getRequestDispatcher("invoice.jsp").forward(request, response);
+                return;
+            }
+
+            bookingDAO.getIntance().updateSignature(bookingId, encryptedResult);
+
             sendSignedInvoiceEmail(customer.getEmail(), customer.getName(), tour, booking, invoiceHash, encryptedResult);
 
             request.setAttribute("invoiceHash", invoiceHash);
-            request.setAttribute("encryptedResult", encryptedResult); // Kết quả mã hóa
+            request.setAttribute("encryptedResult", encryptedResult);
             request.getRequestDispatcher("signatureResult.jsp").forward(request, response);
 
         } catch (Exception e) {
@@ -68,13 +88,58 @@ public class GenerateSignatureServlet extends HttpServlet {
         }
     }
 
-    // ==================== HÀM MÃ HÓA GIỐNG HỆT RSA.java ====================
-    private String encryptWithPrivateKey(String plainText, PrivateKey privateKey) throws Exception {
-        if (plainText == null || plainText.isEmpty()) {
-            return "";
+    private boolean verifySignature(String originalHash, String encryptedData, String publicKeyBase64) {
+        try {
+            String decrypted = decryptWithPublicKey(encryptedData, publicKeyBase64);
+            return originalHash.equals(decrypted);
+        } catch (Exception e) {
+            return false;
         }
+    }
 
-        // 1. Tạo AES key ngẫu nhiên
+    private String decryptWithPublicKey(String encryptedData, String publicKeyBase64) throws Exception {
+        byte[] keyBytes = Base64.getDecoder().decode(publicKeyBase64.trim());
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+        PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(spec);
+
+        byte[] data = Base64.getDecoder().decode(encryptedData);
+
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(data);
+             DataInputStream dis = new DataInputStream(bais)) {
+
+            String algorithm = dis.readUTF();
+            int keySize = dis.readInt();
+            int encKeyLen = dis.readInt();
+            byte[] encAESKey = new byte[encKeyLen];
+            dis.readFully(encAESKey);
+
+            int encIVLen = dis.readInt();
+            byte[] encIV = new byte[encIVLen];
+            dis.readFully(encIV);
+
+            int cipherLen = dis.readInt();
+            byte[] encryptedBytes = new byte[cipherLen];
+            dis.readFully(encryptedBytes);
+
+            Cipher rsaCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            rsaCipher.init(Cipher.DECRYPT_MODE, publicKey);
+            byte[] aesKeyBytes = rsaCipher.doFinal(encAESKey);
+            byte[] iv = rsaCipher.doFinal(encIV);
+
+            SecretKey aesKey = new SecretKeySpec(aesKeyBytes, "AES");
+            IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+            Cipher aesCipher = Cipher.getInstance(algorithm);
+            aesCipher.init(Cipher.DECRYPT_MODE, aesKey, ivSpec);
+            byte[] decryptedBytes = aesCipher.doFinal(encryptedBytes);
+
+            return new String(decryptedBytes, "UTF-8");
+        }
+    }
+
+    private String encryptWithPrivateKey(String plainText, PrivateKey privateKey) throws Exception {
+        if (plainText == null || plainText.isEmpty()) return "";
+
         KeyGenerator kgen = KeyGenerator.getInstance("AES");
         kgen.init(256);
         SecretKey aesKey = kgen.generateKey();
@@ -83,18 +148,15 @@ public class GenerateSignatureServlet extends HttpServlet {
         new SecureRandom().nextBytes(iv);
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
-        // 2. Mã hóa dữ liệu bằng AES
         Cipher aesCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         aesCipher.init(Cipher.ENCRYPT_MODE, aesKey, ivSpec);
         byte[] encryptedBytes = aesCipher.doFinal(plainText.getBytes("UTF-8"));
 
-        // 3. Mã hóa AES key + IV bằng RSA (dùng Private Key)
         Cipher rsaCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         rsaCipher.init(Cipher.ENCRYPT_MODE, privateKey);
         byte[] encAESKey = rsaCipher.doFinal(aesKey.getEncoded());
         byte[] encIV = rsaCipher.doFinal(iv);
 
-        // 4. Gói dữ liệu giống RSA.java
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              DataOutputStream dos = new DataOutputStream(baos)) {
             dos.writeUTF("AES/CBC/PKCS5Padding");
@@ -105,7 +167,6 @@ public class GenerateSignatureServlet extends HttpServlet {
             dos.write(encIV);
             dos.writeInt(encryptedBytes.length);
             dos.write(encryptedBytes);
-
             return Base64.getEncoder().encodeToString(baos.toByteArray());
         }
     }
@@ -125,10 +186,8 @@ public class GenerateSignatureServlet extends HttpServlet {
         return keyFactory.generatePrivate(keySpec);
     }
 
-    // Gửi email (giữ nguyên)
     private void sendSignedInvoiceEmail(String toEmail, String customerName, Tour tour, Booking booking,
                                         String invoiceHash, String encryptedResult) {
-        // Giữ nguyên code gửi email như trước...
         final String from = "philong2m@gmail.com";
         final String password = "nqjk dbbg ilbi faaf";
 
@@ -148,12 +207,16 @@ public class GenerateSignatureServlet extends HttpServlet {
             javax.mail.Message message = new javax.mail.internet.MimeMessage(mailSession);
             message.setFrom(new javax.mail.internet.InternetAddress(from));
             message.setRecipients(javax.mail.Message.RecipientType.TO, javax.mail.internet.InternetAddress.parse(toEmail));
-            message.setSubject("Hóa đơn đặt tour + Dữ liệu đã mã hóa");
+            message.setSubject("Hóa đơn đặt tour và Chữ ký số");
 
             String body = "Kính gửi " + customerName + ",\n\n"
                     + "=== HASH HÓA ĐƠN ===\n" + invoiceHash + "\n\n"
-                    + "=== DỮ LIỆU ĐÃ MÃ HÓA (Hybrid RSA + AES) ===\n" + encryptedResult + "\n\n"
-                    + "Bạn có thể dùng Public Key để giải mã bằng class RSA.java";
+                    + "=== CHỮ KÝ SỐ (ĐÃ XÁC MINH) ===\n" + encryptedResult + "\n\n"
+                    + "Tên tour: " + tour.getName() + "\n"
+                    + "Ngày khởi hành: " + booking.getDepartureDate() + "\n"
+                    + "Số người lớn: " + booking.getNoAdults() + "\n"
+                    + "Số trẻ em: " + booking.getNoChildren() + "\n\n"
+                    + "Cảm ơn bạn đã đặt tour!";
 
             message.setText(body);
             javax.mail.Transport.send(message);

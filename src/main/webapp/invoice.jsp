@@ -10,7 +10,6 @@
     Customer customer = (Customer) request.getAttribute("customer");
     Tour tour = (Tour) request.getAttribute("tour");
 
-    // Tạo nội dung hóa đơn để băm
     StringBuilder sb = new StringBuilder();
     sb.append("Mã Booking: ").append(booking != null ? booking.getId() : "N/A").append("\n");
     sb.append("Khách hàng: ").append(customer.getName()).append("\n");
@@ -21,7 +20,6 @@
     sb.append("Số trẻ em: ").append(booking.getNoChildren()).append("\n");
     sb.append("Giá tour: ").append(tour.getPrice()).append(" VND");
 
-    // Tính SHA-256
     MessageDigest digest = MessageDigest.getInstance("SHA-256");
     byte[] hashBytes = digest.digest(sb.toString().getBytes("UTF-8"));
     String invoiceHash = Base64.getEncoder().encodeToString(hashBytes);
@@ -39,12 +37,13 @@
     <style>
         body { font-family: Arial; margin: 40px; background: #f5f5f5; }
         .container { max-width: 850px; margin: auto; background: white; padding: 30px; border-radius: 10px; }
-        .hash-box { background: #f1f1f1; padding: 15px; font-family: monospace; word-break: break-all; border: 1px solid #ddd; }
-        textarea { width: 100%; height: 160px; font-family: monospace; }
-        button { background: #3498db; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        .hash-box { background: #f1f1f1; padding: 15px; font-family: monospace; word-break: break-all; border: 1px solid #ddd; border-radius: 5px; }
+        textarea { width: 100%; padding: 12px; font-family: monospace; border: 1px solid #ccc; border-radius: 6px; }
+        button { padding: 12px 25px; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
+
 <div class="container">
     <h2>HÓA ĐƠN ĐẶT TOUR - CHỮ KÝ SỐ</h2>
     <hr>
@@ -57,25 +56,50 @@
     <p><strong>Số người lớn:</strong> ${booking.noAdults} | <strong>Trẻ em:</strong> ${booking.noChildren}</p>
     <p><strong>Giá tour:</strong> <fmt:formatNumber value="${tour.price}" type="currency" currencyCode="VND"/></p>
 
-    <h3>Nội dung hóa đơn (để băm)</h3>
+    <h3>Nội dung hóa đơn</h3>
     <pre style="background:#f8f9fa; padding:15px; white-space: pre-wrap; border:1px solid #ddd;">${invoiceContent}</pre>
 
     <h3>Băm hóa đơn (SHA-256)</h3>
     <div class="hash-box">${invoiceHash}</div>
 
     <div style="margin-top: 30px; padding: 20px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffc107;">
-        <h3>Ký hóa đơn bằng Private Key</h3>
+
+        <h3>Chữ ký số</h3>
+
+        <c:if test="${not empty signatureError}">
+            <div style="background: #f8d7da; color: #721c24; padding: 10px 15px; 
+                        border-radius: 6px; margin-bottom: 15px; border: 1px solid #f5c6cb; font-weight: bold;">
+                ${signatureError}
+            </div>
+        </c:if>
+
+        <c:if test="${not empty activePublicKey}">
+            <label><strong>Public Key của bạn:</strong></label>
+            <div style="background: #e8f5e9; padding: 12px; border-radius: 6px; 
+                        word-break: break-all; font-family: monospace; border: 1px solid #27ae60; 
+                        margin-bottom: 20px; min-height: 50px;">
+                ${activePublicKey}
+            </div>
+        </c:if>
+
         <form action="GenerateSignatureServlet" method="post">
             <input type="hidden" name="invoiceHash" value="${invoiceHash}">
             <input type="hidden" name="bookingId" value="${booking.id}">
 
-            <label><strong>Dán Private Key (PEM format):</strong></label><br>
-            <textarea name="privateKeyPem" placeholder="-----BEGIN PRIVATE KEY-----&#10;MIIE...&#10;-----END PRIVATE KEY-----" required></textarea>
+            <label><strong>Private Key (PEM format):</strong></label><br>
+            <textarea name="privateKeyPem" rows="6" 
+                    placeholder="-----BEGIN PRIVATE KEY-----&#10;...&#10;-----END PRIVATE KEY-----" 
+                    required></textarea>
 
             <br><br>
-            <button type="submit">Ký hóa đơn & Gửi email</button>
+            <button type="submit" style="background: #e74c3c; color: white; padding: 12px 25px; 
+                    border: none; border-radius: 6px; font-weight: bold;">
+                Ký hóa đơn & Gửi email
+            </button>
         </form>
     </div>
+
 </div>
+
 </body>
 </html>

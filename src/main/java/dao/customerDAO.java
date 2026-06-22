@@ -6,60 +6,141 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import DataBase.JDBCUltil;
+import java.util.List;
 import model.Customer;
 
 public class customerDAO implements DAOInterface<Customer> {
 	public static customerDAO getIntance() {
 		return new customerDAO();
 	}
+	public String getActivePublicKey(int customerId) {
+		String publicKey = null;
+		Connection con = null;
+		PreparedStatement pst = null;
+		ResultSet rs = null;
+
+		try {
+			con = JDBCUltil.getConnection();
+			String sql = "SELECT publicKey FROM UserPublicKeyHistory WHERE customerId = ? AND isActive = 1";
+			pst = con.prepareStatement(sql);
+			pst.setInt(1, customerId);
+			rs = pst.executeQuery();
+
+			if (rs.next()) {
+				publicKey = rs.getString("publicKey");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			JDBCUltil.closeResultSet(rs);
+			JDBCUltil.closePreparedStatement(pst);
+			JDBCUltil.closeConnection(con);
+		}
+		return publicKey;
+	}
+
+	public List<String> getAllPublicKeysByCustomerId(int customerId) {
+		List<String> keys = new ArrayList<>();
+		Connection con = null;
+		PreparedStatement pst = null;
+		ResultSet rs = null;
+
+		try {
+			con = JDBCUltil.getConnection();
+			String sql = "SELECT publicKey, createdAt, isActive FROM UserPublicKeyHistory WHERE customerId = ? ORDER BY createdAt DESC";
+			pst = con.prepareStatement(sql);
+			pst.setInt(1, customerId);
+			rs = pst.executeQuery();
+
+			while (rs.next()) {
+				String key = rs.getString("publicKey");
+				keys.add(key);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			JDBCUltil.closeResultSet(rs);
+			JDBCUltil.closePreparedStatement(pst);
+			JDBCUltil.closeConnection(con);
+		}
+		return keys;
+	}
+
+	public int addNewPublicKey(int customerId, String publicKey) {
+		int result = 0;
+		Connection con = null;
+		PreparedStatement pst = null;
+
+		try {
+			con = JDBCUltil.getConnection();
+
+			String sql1 = "UPDATE UserPublicKeyHistory SET isActive = 0 WHERE customerId = ?";
+			pst = con.prepareStatement(sql1);
+			pst.setInt(1, customerId);
+			pst.executeUpdate();
+			pst.close();
+
+			String sql2 = "INSERT INTO UserPublicKeyHistory (customerId, publicKey, isActive) VALUES (?, ?, 1)";
+			pst = con.prepareStatement(sql2);
+			pst.setInt(1, customerId);
+			pst.setString(2, publicKey);
+			result = pst.executeUpdate();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			JDBCUltil.closePreparedStatement(pst);
+			JDBCUltil.closeConnection(con);
+		}
+		return result;
+	}
 	// Cập nhật Public Key cho khách hàng
-public int updatePublicKey(int customerId, String publicKey) {
-    int result = 0;
-    Connection con = null;
-    PreparedStatement pst = null;
+	public int updatePublicKey(int customerId, String publicKey) {
+		int result = 0;
+		Connection con = null;
+		PreparedStatement pst = null;
 
-    try {
-        con = JDBCUltil.getConnection();
-        String sql = "UPDATE Customer SET publicKey = ? WHERE id = ?";
-        pst = con.prepareStatement(sql);
-        pst.setString(1, publicKey);
-        pst.setInt(2, customerId);
-        result = pst.executeUpdate();
-    } catch (Exception e) {
-        e.printStackTrace();
-    } finally {
-        JDBCUltil.closePreparedStatement(pst);
-        JDBCUltil.closeConnection(con);
-    }
-    return result;
-}
+		try {
+			con = JDBCUltil.getConnection();
+			String sql = "UPDATE Customer SET publicKey = ? WHERE id = ?";
+			pst = con.prepareStatement(sql);
+			pst.setString(1, publicKey);
+			pst.setInt(2, customerId);
+			result = pst.executeUpdate();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			JDBCUltil.closePreparedStatement(pst);
+			JDBCUltil.closeConnection(con);
+		}
+		return result;
+	}
 
-// Lấy Public Key theo username
-public String getPublicKeyByUsername(String username) {
-    String publicKey = null;
-    Connection con = null;
-    PreparedStatement pst = null;
-    ResultSet rs = null;
+	public String getPublicKeyByUsername(String username) {
+		String publicKey = null;
+		Connection con = null;
+		PreparedStatement pst = null;
+		ResultSet rs = null;
 
-    try {
-        con = JDBCUltil.getConnection();
-        String sql = "SELECT c.publicKey FROM Customer c JOIN [User] u ON c.userId = u.id WHERE u.username = ?";
-        pst = con.prepareStatement(sql);
-        pst.setString(1, username);
-        rs = pst.executeQuery();
+		try {
+			con = JDBCUltil.getConnection();
+			String sql = "SELECT c.publicKey FROM Customer c JOIN [User] u ON c.userId = u.id WHERE u.username = ?";
+			pst = con.prepareStatement(sql);
+			pst.setString(1, username);
+			rs = pst.executeQuery();
 
-        if (rs.next()) {
-            publicKey = rs.getString("publicKey");
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-    } finally {
-        JDBCUltil.closeResultSet(rs);
-        JDBCUltil.closePreparedStatement(pst);
-        JDBCUltil.closeConnection(con);
-    }
-    return publicKey;
-}
+			if (rs.next()) {
+				publicKey = rs.getString("publicKey");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			JDBCUltil.closeResultSet(rs);
+			JDBCUltil.closePreparedStatement(pst);
+			JDBCUltil.closeConnection(con);
+		}
+		return publicKey;
+	}
 	public int insert(Customer customer) throws ClassNotFoundException {
 		int result = 0;
 		Connection connection = null;

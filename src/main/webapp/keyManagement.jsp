@@ -1,31 +1,56 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/keyManagement.css">
     <title>Quản lý Khóa số</title>
 </head>
 <body>
-    <h2>Quản lý Khóa số (Digital Signature)</h2>
+
+<div class="container">
+    <h2>Quản lý Khóa số</h2>
 
     <c:if test="${not empty message}">
-        <p style="color: green;">${message}</p>
+        <div class="message">${message}</div>
     </c:if>
 
-    <h3>Public Key hiện tại của bạn:</h3>
-    <pre style="background:#f0f0f0; padding:15px; word-break:break-all;">${publicKey}</pre>
+    <!-- Public Key đang sử dụng -->
+    <h3>Public Key đang sử dụng:</h3>
+    <div class="current-key">
+        ${activePublicKey}
+    </div>
 
-    <form action="KeyManagement" method="post">
-        <input type="hidden" name="action" value="generateNewKey">
-        <button type="submit" style="background:red; color:white; padding:10px 20px;">
-            Báo mất khóa - Tạo cặp khóa mới
-        </button>
-    </form>
+    <!-- Nút Báo mất khóa -->
+    <button type="button" class="btn btn-red" onclick="showKeyForm()">
+        Báo mất khóa
+    </button>
 
-    <c:if test="${not empty newPrivateKey}">
-        <h3 style="color:red;">⚠️ Private Key MỚI (Chỉ hiển thị 1 lần - Hãy lưu ngay!)</h3>
-        <pre style="background:#fff3cd; padding:15px; word-break:break-all; border:2px solid red;">${newPrivateKey}</pre>
-        
-        <h3>Public Key mới:</h3>
-        <pre>${newPublicKey}</pre>
-    </c:if>
+    <!-- Form nhập Public Key mới (ẩn mặc định) -->
+    <div id="keyForm" style="display: none; margin-top: 25px;">
+        <form action="KeyManagement" method="post">
+            <div class="form-group">
+                <label><strong>Nhập Public Key mới:</strong></label>
+                <textarea name="publicKey" rows="5" placeholder="Dán Public Key mới vào đây..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-red">Lưu Public Key Mới</button>
+        </form>
+    </div>
+
+    <!-- Lịch sử Public Key -->
+    <h3 style="margin-top: 40px;">Lịch sử Public Key đã từng sử dụng:</h3>
+    <c:forEach var="key" items="${allKeys}">
+        <div class="history-item">${key}</div>
+    </c:forEach>
+</div>
+
+<script>
+    function showKeyForm() {
+        document.getElementById('keyForm').style.display = 'block';
+    }
+</script>
+
 </body>
 </html>

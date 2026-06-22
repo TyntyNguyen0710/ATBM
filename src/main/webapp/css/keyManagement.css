@@ -1,0 +1,181 @@
+@charset "UTF-8";
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+}
+
+.container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    max-width: 720px;
+    width: 100%;
+}
+
+h2 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 25px;
+    font-size: 24px;
+}
+
+h3 {
+    color: #34495e;
+    margin-top: 25px;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+/* ==================== PUBLIC KEY HIỂN THỊ ==================== */
+.key-box {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    word-break: break-all;
+    overflow-wrap: break-word;
+    max-height: 140px;           /* Giới hạn chiều cao */
+    overflow-y: auto;            /* Cho phép cuộn nếu quá dài */
+    white-space: pre-wrap;
+    margin-bottom: 20px;
+}
+
+/* Public Key đang active (nổi bật hơn) */
+.current-key {
+    background-color: #e8f5e9;
+    border: 2px solid #27ae60;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    word-break: break-all;
+    overflow-wrap: break-word;
+    max-height: 160px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    margin-bottom: 25px;
+}
+
+/* Form */
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+textarea {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #bdc3c7;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 14px;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+textarea:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+/* Nút */
+.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-red {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-red:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+}
+
+/* Lịch sử */
+.history-box {
+    margin-top: 30px;
+}
+
+.history-item {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    word-break: break-all;
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+/* Thông báo */
+.message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Sửa lỗi tràn key */
+.current-key {
+    background-color: #e8f5e9;
+    border: 2px solid #27ae60;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    word-break: break-all;
+    overflow-wrap: break-word;
+    max-height: 160px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    margin-bottom: 25px;
+    max-width: 100%;
+}
+
+.history-item {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    word-break: break-all;
+    max-height: 100px;
+    overflow-y: auto;
+    max-width: 100%;
+}
