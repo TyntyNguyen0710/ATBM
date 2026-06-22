@@ -14,6 +14,8 @@ public class Booking {
 	private int customerID;
 	private String signature;
 
+	public Booking() {
+	}
 	public String getSignature() {
     	return signature;
 	}

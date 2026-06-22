@@ -17,6 +17,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -35,6 +36,9 @@ public class GenerateSignatureServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        HttpSession session = request.getSession();
+        String username = (String) session.getAttribute("username");
 
         String invoiceHash = request.getParameter("invoiceHash");
         String privateKeyBase64 = request.getParameter("privateKeyPem");
@@ -65,7 +69,7 @@ public class GenerateSignatureServlet extends HttpServlet {
 
             if (!isValid) {
                 request.setAttribute("signatureError", "Chữ ký không hợp lệ!");
-                request.setAttribute("activePublicKey", publicKeyBase64);   // ← Thêm dòng này
+                request.setAttribute("activePublicKey", publicKeyBase64);
                 request.setAttribute("invoiceHash", invoiceHash);
                 request.setAttribute("booking", booking);
                 request.setAttribute("tour", tour);
@@ -76,18 +80,20 @@ public class GenerateSignatureServlet extends HttpServlet {
 
             bookingDAO.getIntance().updateSignature(bookingId, encryptedResult);
 
+            request.setAttribute("tour", tour);
+            request.setAttribute("booking", booking);
+            request.setAttribute("customer", customer);
+
             sendSignedInvoiceEmail(customer.getEmail(), customer.getName(), tour, booking, invoiceHash, encryptedResult);
 
-            request.setAttribute("invoiceHash", invoiceHash);
-            request.setAttribute("encryptedResult", encryptedResult);
             request.getRequestDispatcher("signatureResult.jsp").forward(request, response);
-
         } catch (Exception e) {
             e.printStackTrace();
             response.getWriter().println("Lỗi: " + e.getMessage());
         }
     }
 
+    // ==================== GIỮ NGUYÊN CÁC HÀM HỖ TRỢ ====================
     private boolean verifySignature(String originalHash, String encryptedData, String publicKeyBase64) {
         try {
             String decrypted = decryptWithPublicKey(encryptedData, publicKeyBase64);
@@ -187,7 +193,7 @@ public class GenerateSignatureServlet extends HttpServlet {
     }
 
     private void sendSignedInvoiceEmail(String toEmail, String customerName, Tour tour, Booking booking,
-                                        String invoiceHash, String encryptedResult) {
+                                    String invoiceHash, String encryptedResult) {
         final String from = "philong2m@gmail.com";
         final String password = "nqjk dbbg ilbi faaf";
 
@@ -204,24 +210,26 @@ public class GenerateSignatureServlet extends HttpServlet {
         });
 
         try {
-            javax.mail.Message message = new javax.mail.internet.MimeMessage(mailSession);
+            javax.mail.internet.MimeMessage message = new javax.mail.internet.MimeMessage(mailSession);
             message.setFrom(new javax.mail.internet.InternetAddress(from));
             message.setRecipients(javax.mail.Message.RecipientType.TO, javax.mail.internet.InternetAddress.parse(toEmail));
-            message.setSubject("Hóa đơn đặt tour và Chữ ký số");
+            message.setSubject("Xác nhận đặt tour và Chữ ký số - " + tour.getName());
 
             String body = "Kính gửi " + customerName + ",\n\n"
-                    + "=== HASH HÓA ĐƠN ===\n" + invoiceHash + "\n\n"
-                    + "=== CHỮ KÝ SỐ (ĐÃ XÁC MINH) ===\n" + encryptedResult + "\n\n"
-                    + "Tên tour: " + tour.getName() + "\n"
+                    + "Bạn đã đặt tour thành công và ký chữ ký số.\n\n"
+                    + "=== THÔNG TIN TOUR ===\n"
+                    + "Tour: " + tour.getName() + "\n"
                     + "Ngày khởi hành: " + booking.getDepartureDate() + "\n"
                     + "Số người lớn: " + booking.getNoAdults() + "\n"
                     + "Số trẻ em: " + booking.getNoChildren() + "\n\n"
-                    + "Cảm ơn bạn đã đặt tour!";
+                    + "Cảm ơn bạn đã đặt tour và sử dụng dịch vụ chữ ký số!\n\n"
+                    + "Trân trọng,\n"
+                    + "Đội ngũ hỗ trợ";
 
             message.setText(body);
             javax.mail.Transport.send(message);
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
+}
 }

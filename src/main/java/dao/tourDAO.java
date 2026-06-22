@@ -85,34 +85,37 @@ public class tourDAO implements DAOInterface<Tour> {
 	}
 
 	public Tour selectByID(String tourId) throws ClassNotFoundException {
-		// TODO Auto-generated method stub
 		Tour result = null;
-		Connection con = JDBCUltil.getConnection();
-		String sql = "SELECT * FROM Tour WHERE tourId=?";
+		Connection con = null;
+		PreparedStatement pst = null;
+		ResultSet rs = null;
 
 		try {
-			PreparedStatement pst = con.prepareStatement(sql);
-			pst.setString(1, tourId); // Set the tourId as a String parameter
-			ResultSet rs = pst.executeQuery();
+			con = JDBCUltil.getConnection();
+			String sql = "SELECT * FROM Tour WHERE tourId = ?";
+			pst = con.prepareStatement(sql);
+			pst.setString(1, tourId);
+			rs = pst.executeQuery();
 
-			while (rs.next()) {
+			if (rs.next()) {
 				int id = rs.getInt("tourId");
 				String name = rs.getString("tenTour");
 				String duration = rs.getString("duration");
 				String schedule = rs.getString("schedule");
 				String departure = rs.getString("departure");
+				float price = rs.getFloat("price");           // ← Lấy đúng cột price
 				String transport = rs.getString("transport");
-				result = new Tour(id, name, duration, schedule, departure, id, transport);
+
+				result = new Tour(id, name, duration, schedule, departure, price, transport);
 			}
-
-			JDBCUltil.closeConnection(con);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			JDBCUltil.closeResultSet(rs);
+			JDBCUltil.closePreparedStatement(pst);
+			JDBCUltil.closeConnection(con);
 		}
-
 		return result;
-
 	}
 
 	public ArrayList<Tour> selectAll() throws SQLException, ClassNotFoundException {

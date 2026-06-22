@@ -1,42 +1,39 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
-    <title>Kết quả chữ ký số / Mã hóa</title>
+    <title>Đặt tour thành công</title>
     <style>
-        body { font-family: Arial; margin: 40px; background: #f5f5f5; }
-        .result { background: #e8f5e9; padding: 25px; border-radius: 10px; max-width: 900px; margin: auto; }
-        pre { 
-            background: #f8f9fa; 
-            padding: 15px; 
-            word-break: break-all; 
-            border: 1px solid #ddd; 
-            border-radius: 5px;
-            font-size: 14px;
+        body { font-family: Arial, sans-serif; background: #f8f9fa; padding: 40px; text-align: center; }
+        .success-box {
+            max-width: 520px; margin: 0 auto; background: white;
+            padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
-        h3 { color: #2c3e50; }
+        h2 { color: #27ae60; margin-bottom: 25px; }
+        .info { text-align: left; background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0; }
+        .info p { margin: 8px 0; }
+        .signed { color: #e74c3c; font-weight: bold; font-size: 17px; margin: 25px 0; }
+        .btn {
+            display: inline-block; padding: 12px 35px; background: #3498db; color: white;
+            text-decoration: none; border-radius: 8px; font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <div class="result">
-        <h2 style="color: #27ae60;">✅ Chữ ký số / Dữ liệu đã mã hóa thành công!</h2>
-        <hr>
 
-        <h3>Hash của hóa đơn (SHA-256):</h3>
-        <pre>${invoiceHash}</pre>
+<div class="success-box">
+    <h2>🎉 Đặt tour thành công!</h2>
 
-        <h3>Dữ liệu đã mã hóa (Hybrid RSA + AES - Tương thích với RSA.java):</h3>
-        <pre style="background: #fff3cd; border: 2px solid #f39c12;">${encryptedResult}</pre>
-
-        <p style="margin-top: 20px; color: #555;">
-            <strong>Hướng dẫn:</strong> Bạn có thể copy đoạn "Dữ liệu đã mã hóa" ở trên và giải mã bằng class 
-            <code>RSA.java</code> của bạn (dùng Public Key tương ứng).
-        </p>
+    <div class="info">
+        <p><strong>Tour:</strong> ${tour.name}</p>
+        <p><strong>Ngày khởi hành:</strong> ${booking.departureDate}</p>
+        <p><strong>Số người lớn:</strong> ${booking.noAdults}</p>
+        <p><strong>Số trẻ em:</strong> ${booking.noChildren}</p>
     </div>
 
-    <div style="text-align: center; margin-top: 30px;">
-        <a href="trangchu.jsp" style="padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 5px;">
-            Quay về trang chủ
-        </a>
-    </div>
+    <div class="signed">✅ Đã ký chữ ký số thành công</div>
+
+    <a href="trangchu.jsp" class="btn">Quay về trang chủ</a>
+</div>
+
 </body>
 </html>

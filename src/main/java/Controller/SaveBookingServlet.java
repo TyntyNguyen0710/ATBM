@@ -2,7 +2,6 @@ package Controller;
 
 import java.io.IOException;
 import java.sql.Date;
-import java.sql.SQLException;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -21,76 +20,51 @@ import model.Tour;
 
 @WebServlet("/SaveBooking")
 public class SaveBookingServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
 
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-		response.setContentType("text/html;charset=UTF-8");
-		request.setCharacterEncoding("UTF-8");
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-		HttpSession session = request.getSession();
-		int tourId = (int) session.getAttribute("tourID");
-		String username = (String) session.getAttribute("username");
+        HttpSession session = request.getSession();
+        int tourId = (int) session.getAttribute("tourID");
+        String username = (String) session.getAttribute("username");
 
-		String fullName = request.getParameter("fullName");
-		String address = request.getParameter("address");
-		String email = request.getParameter("email");
-		String phone = request.getParameter("phone");
-		String departureDate = request.getParameter("departureDate");
-		String adults = request.getParameter("adults");
-		String childs = request.getParameter("childs");
+        String fullName = request.getParameter("fullName");
+        String address = request.getParameter("address");
+        String email = request.getParameter("email");
+        String phone = request.getParameter("phone");
+        String departureDate = request.getParameter("departureDate");
+        int adults = Integer.parseInt(request.getParameter("adults"));
+        int childs = Integer.parseInt(request.getParameter("childs"));
 
-		try {
-			Booking booking = null;
+        try {
+            Tour tour = tourDAO.getIntance().selectByID(String.valueOf(tourId));
+            request.setAttribute("tour", tour);
 
-			if (username != null && !username.equals("")) {
-				booking = saveBookingToDatabaseAfterLogin(tourId, fullName, address, email, phone,
-						departureDate, adults, childs, username);
-			} else {
-				booking = saveBookingToDatabase(tourId, fullName, address, email, phone, departureDate, adults, childs);
-			}
+            Customer tempCustomer = new Customer(fullName, address, email, phone);
 
-			request.setAttribute("booking", booking);
+            Booking booking;
 
-			Tour tour = tourDAO.getIntance().selectByID(String.valueOf(tourId));
-			request.setAttribute("tour", tour);
+            if (username != null && !username.isEmpty()) {
+                // Đã đăng nhập → insert bình thường
+                int customerID = customerDAO.getIntance().selectByUsername(username).getID();
+                booking = new Booking(tempCustomer, Date.valueOf(departureDate), adults, childs, email, tourId, customerID);
+                bookingDAO.getIntance().insert(booking);
+            } else {
+                // Chưa đăng nhập → insertNoLogin
+                booking = new Booking(tempCustomer, Date.valueOf(departureDate), adults, childs, email, tourId);
+                bookingDAO.getIntance().insertNoLogin(booking);
+            }
 
-			Customer customer = (username != null && !username.isEmpty())
-					? customerDAO.getIntance().selectByUsername(username)
-					: new Customer(fullName, address, email, phone);
+            request.setAttribute("booking", booking);
+            request.setAttribute("customer", tempCustomer);
 
-			request.setAttribute("customer", customer);
+            // Chuyển sang trang hóa đơn + chữ ký
+            RequestDispatcher dispatcher = request.getRequestDispatcher("invoice.jsp");
+            dispatcher.forward(request, response);
 
-			String activePublicKey = customerDAO.getIntance().getActivePublicKey(customer.getID());
-			request.setAttribute("activePublicKey", activePublicKey);
-
-			RequestDispatcher dispatcher = request.getRequestDispatcher("invoice.jsp");
-			dispatcher.forward(request, response);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	private Booking saveBookingToDatabaseAfterLogin(int tourId, String fullName, String address, String email,
-			String phone, String departureDate, String adults, String childs, String username) throws ClassNotFoundException {
-		int customerID = customerDAO.getIntance().selectByUsername(username).getID();
-		bookingDAO tour = bookingDAO.getIntance();
-		Customer customer = new Customer(fullName, address, email, phone);
-		Booking booking = new Booking(customer, Date.valueOf(departureDate), Integer.valueOf(adults),
-				Integer.valueOf(childs), customer.getEmail(), tourId, customerID);
-		tour.insert(booking);
-		return booking;
-	}
-
-	private Booking saveBookingToDatabase(int tourId, String fullName, String address, String email, String phone,
-			String departureDate, String adults, String childs) throws SQLException, ClassNotFoundException {
-		bookingDAO tour = bookingDAO.getIntance();
-		Customer customer = new Customer(fullName, address, email, phone);
-		Booking booking = new Booking(customer, Date.valueOf(departureDate), Integer.valueOf(adults),
-				Integer.valueOf(childs), customer.getEmail(), tourId);
-		customerDAO.getIntance().insertNoLogin(customer);
-		tour.insertNoLogin(booking);
-		return booking;
-	}
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.getWriter().println("Lỗi khi lưu booking: " + e.getMessage());
+        }
+    }
 }
