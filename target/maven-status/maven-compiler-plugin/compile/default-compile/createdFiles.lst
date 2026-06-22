@@ -1,5 +1,6 @@
 Controller\ChangePasswordServlet$1.class
 Controller\LoginServlet.class
+Controller\KeyManagementServlet.class
 Filter\AuthenticationFilter.class
 Filter\AdminAccessFilter.class
 Filter\ChangeInformationFilter.class
@@ -22,7 +23,6 @@ util\PasswordUtil.class
 Filter\OTPConfirmationAccess.class
 Filter\ChangePasswordFilter.class
 Controller\SendOTPViaForgetPasswordServlet$1.class
-Controller\SaveBookingServlet$1.class
 Controller\VerifyOTPTourServlet.class
 Controller\VerifyOTPForgetPasswordServlet.class
 util\EmailUtil$1.class

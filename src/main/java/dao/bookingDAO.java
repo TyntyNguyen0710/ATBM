@@ -53,7 +53,26 @@ public class bookingDAO implements DAOInterface<Booking> {
 		}
 		return result;
 	}
+	public int updateSignature(long bookingId, String signature) {
+		int result = 0;
+		Connection con = null;
+		PreparedStatement pst = null;
 
+		try {
+			con = JDBCUltil.getConnection();
+			String sql = "UPDATE Booking SET signature = ? WHERE id = ?";
+			pst = con.prepareStatement(sql);
+			pst.setString(1, signature);
+			pst.setLong(2, bookingId);
+			result = pst.executeUpdate();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			JDBCUltil.closePreparedStatement(pst);
+			JDBCUltil.closeConnection(con);
+		}
+		return result;
+	}
 	public int insertNoLogin(Booking booking) throws ClassNotFoundException {
 		int result = 0;
 		Connection connection = null;
