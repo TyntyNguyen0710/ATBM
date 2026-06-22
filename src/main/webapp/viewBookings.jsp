@@ -39,23 +39,40 @@ if (!"Admin".equals(userRole)) {
 				<th>Số lượng trẻ em</th>
 				<th>Email</th>
 				<th>Tour ID</th>
+				<th>Chữ ký</th> 
 				<th>Xóa</th>
 			</tr>
 
 			<c:forEach var="booking" items="${bookings}">
 				<tr>
 					<td>${booking.id}</td>
-					<td><fmt:formatDate value="${booking.departureDate}"
-							pattern="dd/MM/yyyy" /></td>
+					<td><fmt:formatDate value="${booking.departureDate}" pattern="dd/MM/yyyy" /></td>
 					<td>${booking.noAdults}</td>
 					<td>${booking.noChildren}</td>
 					<td>${booking.email}</td>
 					<td>${booking.tourID}</td>
+
+					<td>
+						<c:choose>
+							<c:when test="${booking.signature == null || booking.signature == ''}">
+								<span style="color: #e74c3c; font-weight: bold;">Chưa ký</span>
+							</c:when>
+							<c:otherwise>
+								<%
+									long bookingId = ((model.Booking) pageContext.findAttribute("booking")).getId();
+									String status = bookingDAO.getIntance().getSignatureVerificationStatus(bookingId);
+								%>
+								<span style="color: <%= status.equals("Đã ký") ? "#27ae60" : "#e74c3c" %>; font-weight: bold;">
+									<%= status %>
+								</span>
+							</c:otherwise>
+						</c:choose>
+					</td>
+
 					<td>
 						<form action="DeleteBookingServlet" method="post">
 							<input type="hidden" name="bookingId" value="${booking.id}">
 							<input type="hidden" name="email" value="${booking.email}">
-
 							<input type="submit" value="Xóa">
 						</form>
 					</td>
