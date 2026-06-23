@@ -6,6 +6,7 @@ Filter\AdminAccessFilter.class
 Filter\ChangeInformationFilter.class
 Controller\logoutServlet$LogoutTask.class
 Controller\SendOTPViaForgetPasswordServlet.class
+Controller\DownloadKeyToolServlet.class
 Controller\DeleteBookingServlet$1.class
 Filter\BookingInfoNoLoginFilter.class
 Controller\ChangePasswordServlet.class
