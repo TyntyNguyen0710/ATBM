@@ -40,7 +40,7 @@
     </div>
 
     <button type="button" class="btn btn-red" onclick="showKeyForm()">
-        Báo mất khóa
+        Thay đổi Public Key
     </button>
 
     <div id="keyForm" style="display: none; margin-top: 25px;">

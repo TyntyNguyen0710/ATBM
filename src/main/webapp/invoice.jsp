@@ -86,8 +86,8 @@
             <input type="hidden" name="invoiceHash" value="${invoiceHash}">
             <input type="hidden" name="bookingId" value="${booking.id}">
 
-            <label><strong>Private Key (PEM format):</strong></label><br>
-            <textarea name="privateKeyPem" rows="6" placeholder="-----BEGIN PRIVATE KEY-----&#10;...&#10;-----END PRIVATE KEY-----" required></textarea>
+            <label><strong>Private Key:</strong></label><br>
+            <textarea name="privateKeyPem" rows="6" placeholder="Private Key" required></textarea>
 
             <br><br>
             <button type="submit" style="background: #e74c3c;">Ký hóa đơn & Gửi email</button>
