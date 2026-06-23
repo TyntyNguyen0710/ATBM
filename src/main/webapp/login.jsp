@@ -13,7 +13,7 @@
 <body>
 	<div class="login-container">
 		<h1>Đăng nhập</h1>
-		<form class="login-form" action="login" method="post">
+		<form class="login-form" action="checkingLogin" method="post">
 			<div class="form-group">
 				<label for="username">Tên đăng nhập:</label> <input type="text"
 					id="username" name="username" required>

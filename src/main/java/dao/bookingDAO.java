@@ -10,12 +10,98 @@ import java.util.List;
 import DataBase.JDBCUltil;
 import model.Booking;
 import model.Customer;
+import java.security.MessageDigest;
+import java.util.Base64;
+import model.Tour;
+
 
 public class bookingDAO implements DAOInterface<Booking> {
 	public static bookingDAO getIntance() {
 		return new bookingDAO();
 	}
+	public String getSignatureVerificationStatus(long bookingId) {
+		Booking booking = selectByBookingId(bookingId);
+		if (booking == null) return "Không tìm thấy";
+		if (booking.getSignature() == null || booking.getSignature().isEmpty()) {
+			return "Chưa ký";
+		}
+		try {
+			Customer customer = customerDAO.getIntance().selectByIDCustomer(booking.getCustomerID());
+			Tour tour = tourDAO.getIntance().selectByID(String.valueOf(booking.getTourID()));
+			if (customer == null || tour == null) return "Chữ ký sai";
+			StringBuilder sb = new StringBuilder();
+			sb.append("BookingID:").append(booking.getId()).append("|");
+			sb.append("Customer:").append(customer.getName()).append("-").append(customer.getEmail()).append("|");
+			sb.append("Tour:").append(tour.getName()).append("|");
+			sb.append("Date:").append(booking.getDepartureDate()).append("|");
+			sb.append("People:").append(booking.getNoAdults()).append("-").append(booking.getNoChildren()).append("|");
+			sb.append("Price:").append(tour.getPrice());
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			byte[] hashBytes = digest.digest(sb.toString().getBytes("UTF-8"));
+			String invoiceHash = Base64.getEncoder().encodeToString(hashBytes);
+			List<String> allPublicKeys = customerDAO.getIntance().getAllPublicKeysByCustomerId(booking.getCustomerID());
+			if (allPublicKeys == null || allPublicKeys.isEmpty()) {
+				return "Chữ ký sai";
+			}
+			for (String publicKey : allPublicKeys) {
+				if (publicKey == null || publicKey.trim().isEmpty()) continue;
+				try {
+					boolean valid = verifySignature(invoiceHash, booking.getSignature(), publicKey);
+					if (valid) {
+						return "Đã ký";
+					}
+				} catch (Exception ignored) {
+				}
+			}
+			return "Chữ ký sai";
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "Chữ ký sai";
+		}
+	}
+	private boolean verifySignature(String originalHash, String encryptedData, String publicKeyBase64) {
+		try {
+			String decrypted = decryptWithPublicKey(encryptedData, publicKeyBase64);
+			return originalHash.equals(decrypted);
+		} catch (Exception e) {
+			return false;
+		}
+	}
+	private String decryptWithPublicKey(String encryptedData, String publicKeyBase64) throws Exception {
+		byte[] keyBytes = Base64.getDecoder().decode(publicKeyBase64.trim());
+		java.security.spec.X509EncodedKeySpec spec = new java.security.spec.X509EncodedKeySpec(keyBytes);
+		java.security.PublicKey publicKey = java.security.KeyFactory.getInstance("RSA").generatePublic(spec);
+		byte[] data = Base64.getDecoder().decode(encryptedData);
+		try (java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(data);
+			java.io.DataInputStream dis = new java.io.DataInputStream(bais)) {
+			String algorithm = dis.readUTF();
+			int keySize = dis.readInt();
+			int encKeyLen = dis.readInt();
+			byte[] encAESKey = new byte[encKeyLen];
+			dis.readFully(encAESKey);
+			int encIVLen = dis.readInt();
+			byte[] encIV = new byte[encIVLen];
+			dis.readFully(encIV);
 
+			int cipherLen = dis.readInt();
+			byte[] encryptedBytes = new byte[cipherLen];
+			dis.readFully(encryptedBytes);
+
+			javax.crypto.Cipher rsaCipher = javax.crypto.Cipher.getInstance("RSA/ECB/PKCS1Padding");
+			rsaCipher.init(javax.crypto.Cipher.DECRYPT_MODE, publicKey);
+			byte[] aesKeyBytes = rsaCipher.doFinal(encAESKey);
+			byte[] iv = rsaCipher.doFinal(encIV);
+
+			javax.crypto.SecretKey aesKey = new javax.crypto.spec.SecretKeySpec(aesKeyBytes, "AES");
+			javax.crypto.spec.IvParameterSpec ivSpec = new javax.crypto.spec.IvParameterSpec(iv);
+
+			javax.crypto.Cipher aesCipher = javax.crypto.Cipher.getInstance(algorithm);
+			aesCipher.init(javax.crypto.Cipher.DECRYPT_MODE, aesKey, ivSpec);
+			byte[] decryptedBytes = aesCipher.doFinal(encryptedBytes);
+
+			return new String(decryptedBytes, "UTF-8");
+		}
+	}
 	@Override
 	public int insert(Booking booking) throws ClassNotFoundException {
 		int result = 0;
@@ -27,7 +113,6 @@ public class bookingDAO implements DAOInterface<Booking> {
 			connection = JDBCUltil.getConnection();
 			String sql = "INSERT INTO Booking (departureDate, noAdults, noChildren, email, tourId, customerId) VALUES (?, ?, ?, ?, ?, ?)";
 
-			// Thêm RETURN_GENERATED_KEYS
 			preparedStatement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
 
 			preparedStatement.setDate(1, new java.sql.Date(booking.getDepartureDate().getTime()));
@@ -53,7 +138,26 @@ public class bookingDAO implements DAOInterface<Booking> {
 		}
 		return result;
 	}
+	public int updateSignature(long bookingId, String signature) {
+		int result = 0;
+		Connection con = null;
+		PreparedStatement pst = null;
 
+		try {
+			con = JDBCUltil.getConnection();
+			String sql = "UPDATE Booking SET signature = ? WHERE id = ?";
+			pst = con.prepareStatement(sql);
+			pst.setString(1, signature);
+			pst.setLong(2, bookingId);
+			result = pst.executeUpdate();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			JDBCUltil.closePreparedStatement(pst);
+			JDBCUltil.closeConnection(con);
+		}
+		return result;
+	}
 	public int insertNoLogin(Booking booking) throws ClassNotFoundException {
 		int result = 0;
 		Connection connection = null;
@@ -184,7 +288,6 @@ public class bookingDAO implements DAOInterface<Booking> {
 			// Execute the query
 			resultSet = preparedStatement.executeQuery();
 
-			// Iterate through the result set and create Booking objects
 			while (resultSet.next()) {
 				long id = resultSet.getLong("id");
 				Date departureDate = resultSet.getDate("departureDate");
@@ -193,14 +296,14 @@ public class bookingDAO implements DAOInterface<Booking> {
 				String email = resultSet.getString("email");
 				int tourId = resultSet.getInt("tourId");
 				int customerId = resultSet.getInt("customerId");
-
-				// Fetch associated Tour and Customer objects based on their IDs
+				String signature = resultSet.getString("signature");  
 
 				Customer customer = customerDAO.getIntance().selectByID(String.valueOf(customerId));
 
-				// Create a Booking object and add it to the list
 				Booking booking = new Booking(customer, departureDate, noAdults, noChildren, email, tourId);
 				booking.setId(id);
+				booking.setSignature(signature);                      
+
 				bookings.add(booking);
 			}
 		} catch (SQLException e) {
@@ -317,42 +420,43 @@ public class bookingDAO implements DAOInterface<Booking> {
 		return bookings;
 	}
 
-	// ==================== THÊM PHƯƠNG THỨC MỚI ====================
-public Booking selectByBookingId(long bookingId) {
-    Booking booking = null;
-    Connection connection = null;
-    PreparedStatement preparedStatement = null;
-    ResultSet resultSet = null;
+	public Booking selectByBookingId(long bookingId) {
+		Booking booking = null;
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
 
-    try {
-        connection = JDBCUltil.getConnection();
-        String sql = "SELECT * FROM Booking WHERE id = ?";
-        preparedStatement = connection.prepareStatement(sql);
-        preparedStatement.setLong(1, bookingId);
-        resultSet = preparedStatement.executeQuery();
+		try {
+			connection = JDBCUltil.getConnection();
+			String sql = "SELECT * FROM Booking WHERE id = ?";
+			preparedStatement = connection.prepareStatement(sql);
+			preparedStatement.setLong(1, bookingId);
+			resultSet = preparedStatement.executeQuery();
 
-        if (resultSet.next()) {
-            long id = resultSet.getLong("id");
-            Date departureDate = resultSet.getDate("departureDate");
-            int noAdults = resultSet.getInt("noAdults");
-            int noChildren = resultSet.getInt("noChildren");
-            String email = resultSet.getString("email");
-            int tourId = resultSet.getInt("tourId");
-            int customerId = resultSet.getInt("customerId");
+			if (resultSet.next()) {
+				long id = resultSet.getLong("id");
+				Date departureDate = resultSet.getDate("departureDate");
+				int noAdults = resultSet.getInt("noAdults");
+				int noChildren = resultSet.getInt("noChildren");
+				String email = resultSet.getString("email");
+				int tourId = resultSet.getInt("tourId");
+				int customerId = resultSet.getInt("customerId");
+				String signature = resultSet.getString("signature");  
 
-            Customer customer = customerDAO.getIntance().selectByIDCustomer(customerId);
+				Customer customer = customerDAO.getIntance().selectByIDCustomer(customerId);
 
-            booking = new Booking(customer, departureDate, noAdults, noChildren, email, tourId, customerId);
-            booking.setId(id);
-        }
-    } catch (SQLException | ClassNotFoundException e) {
-        e.printStackTrace();
-    } finally {
-        JDBCUltil.closePreparedStatement(preparedStatement);
-        JDBCUltil.closeConnection(connection);
-    }
-    return booking;
-}
+				booking = new Booking(customer, departureDate, noAdults, noChildren, email, tourId, customerId);
+				booking.setId(id);
+				booking.setSignature(signature);                     
+			}
+		} catch (SQLException | ClassNotFoundException e) {
+			e.printStackTrace();
+		} finally {
+			JDBCUltil.closePreparedStatement(preparedStatement);
+			JDBCUltil.closeConnection(connection);
+		}
+		return booking;
+	}
 // ============================================================
 	public Booking getLatestBookingByEmailAndTour(String email, int tourId) {
     Booking booking = null;

@@ -69,7 +69,7 @@ public class CheckingLoginServlet extends HttpServlet {
                 if ("Admin".equals(role)) {
                     response.sendRedirect("admin.jsp");
                 } else if ("Customer".equals(role)) {
-                    response.sendRedirect("checkingTourAfterLogin.jsp");
+                    response.sendRedirect("trangchu.jsp");
                 } else {
                     response.sendRedirect("trangchu.jsp");
                 }

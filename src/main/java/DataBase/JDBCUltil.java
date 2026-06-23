@@ -3,6 +3,7 @@ package DataBase;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class JDBCUltil {
@@ -48,5 +49,15 @@ public class JDBCUltil {
 	public static void main(String[] args) throws ClassNotFoundException {
 		Connection c = JDBCUltil.getConnection();
 		System.out.println(c);
+	}
+
+	public static void closeResultSet(ResultSet rs) {
+		if (rs != null) {
+			try {
+				rs.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

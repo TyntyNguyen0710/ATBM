@@ -6,13 +6,141 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import DataBase.JDBCUltil;
+import java.util.List;
 import model.Customer;
 
 public class customerDAO implements DAOInterface<Customer> {
 	public static customerDAO getIntance() {
 		return new customerDAO();
 	}
+	public String getActivePublicKey(int customerId) {
+		String publicKey = null;
+		Connection con = null;
+		PreparedStatement pst = null;
+		ResultSet rs = null;
 
+		try {
+			con = JDBCUltil.getConnection();
+			String sql = "SELECT publicKey FROM UserPublicKeyHistory WHERE customerId = ? AND isActive = 1";
+			pst = con.prepareStatement(sql);
+			pst.setInt(1, customerId);
+			rs = pst.executeQuery();
+
+			if (rs.next()) {
+				publicKey = rs.getString("publicKey");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			JDBCUltil.closeResultSet(rs);
+			JDBCUltil.closePreparedStatement(pst);
+			JDBCUltil.closeConnection(con);
+		}
+		return publicKey;
+	}
+
+	public List<String> getAllPublicKeysByCustomerId(int customerId) {
+		List<String> keys = new ArrayList<>();
+		Connection con = null;
+		PreparedStatement pst = null;
+		ResultSet rs = null;
+
+		try {
+			con = JDBCUltil.getConnection();
+			String sql = "SELECT publicKey, createdAt, isActive FROM UserPublicKeyHistory WHERE customerId = ? ORDER BY createdAt DESC";
+			pst = con.prepareStatement(sql);
+			pst.setInt(1, customerId);
+			rs = pst.executeQuery();
+
+			while (rs.next()) {
+				String key = rs.getString("publicKey");
+				keys.add(key);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			JDBCUltil.closeResultSet(rs);
+			JDBCUltil.closePreparedStatement(pst);
+			JDBCUltil.closeConnection(con);
+		}
+		return keys;
+	}
+
+	public int addNewPublicKey(int customerId, String publicKey) {
+		int result = 0;
+		Connection con = null;
+		PreparedStatement pst = null;
+
+		try {
+			con = JDBCUltil.getConnection();
+
+			String sql1 = "UPDATE UserPublicKeyHistory SET isActive = 0 WHERE customerId = ?";
+			pst = con.prepareStatement(sql1);
+			pst.setInt(1, customerId);
+			pst.executeUpdate();
+			pst.close();
+
+			String sql2 = "INSERT INTO UserPublicKeyHistory (customerId, publicKey, isActive) VALUES (?, ?, 1)";
+			pst = con.prepareStatement(sql2);
+			pst.setInt(1, customerId);
+			pst.setString(2, publicKey);
+			result = pst.executeUpdate();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			JDBCUltil.closePreparedStatement(pst);
+			JDBCUltil.closeConnection(con);
+		}
+		return result;
+	}
+	// Cập nhật Public Key cho khách hàng
+	public int updatePublicKey(int customerId, String publicKey) {
+		int result = 0;
+		Connection con = null;
+		PreparedStatement pst = null;
+
+		try {
+			con = JDBCUltil.getConnection();
+			String sql = "UPDATE Customer SET publicKey = ? WHERE id = ?";
+			pst = con.prepareStatement(sql);
+			pst.setString(1, publicKey);
+			pst.setInt(2, customerId);
+			result = pst.executeUpdate();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			JDBCUltil.closePreparedStatement(pst);
+			JDBCUltil.closeConnection(con);
+		}
+		return result;
+	}
+
+	public String getPublicKeyByUsername(String username) {
+		String publicKey = null;
+		Connection con = null;
+		PreparedStatement pst = null;
+		ResultSet rs = null;
+
+		try {
+			con = JDBCUltil.getConnection();
+			String sql = "SELECT c.publicKey FROM Customer c JOIN [User] u ON c.userId = u.id WHERE u.username = ?";
+			pst = con.prepareStatement(sql);
+			pst.setString(1, username);
+			rs = pst.executeQuery();
+
+			if (rs.next()) {
+				publicKey = rs.getString("publicKey");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			JDBCUltil.closeResultSet(rs);
+			JDBCUltil.closePreparedStatement(pst);
+			JDBCUltil.closeConnection(con);
+		}
+		return publicKey;
+	}
 	public int insert(Customer customer) throws ClassNotFoundException {
 		int result = 0;
 		Connection connection = null;
@@ -21,7 +149,6 @@ public class customerDAO implements DAOInterface<Customer> {
 		try {
 			connection = JDBCUltil.getConnection();
 
-			// Check if the username exists in the Users table
 			if (usernameExists(connection, customer.getUser().getUsername())) {
 				String sql = "INSERT INTO Customer (name, address, email, phone, username,role) VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -33,14 +160,12 @@ public class customerDAO implements DAOInterface<Customer> {
 				preparedStatement.setString(5, customer.getUser().getUsername());
 				preparedStatement.setString(6, "Customer");
 
-				// Execute the insert
 				result = preparedStatement.executeUpdate();
 			} else {
-				// Handle the case where the username does not exist
 				System.err.println("Error: Username does not exist in the Users table.");
 			}
 		} catch (SQLException e) {
-			e.printStackTrace(); // Handle the exception based on your application's needs
+			e.printStackTrace(); 
 		} finally {
 			JDBCUltil.closePreparedStatement(preparedStatement);
 			JDBCUltil.closeConnection(connection);
