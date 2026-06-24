@@ -215,6 +215,7 @@ public class GenerateSignatureServlet extends HttpServlet {
             message.setRecipients(javax.mail.Message.RecipientType.TO, javax.mail.internet.InternetAddress.parse(toEmail));
             message.setSubject("Xác nhận đặt tour và Chữ ký số - " + tour.getName());
 
+            // ===== Nội dung email =====
             String body = "Kính gửi " + customerName + ",\n\n"
                     + "Bạn đã đặt tour thành công và ký chữ ký số.\n\n"
                     + "=== THÔNG TIN TOUR ===\n"
@@ -222,14 +223,39 @@ public class GenerateSignatureServlet extends HttpServlet {
                     + "Ngày khởi hành: " + booking.getDepartureDate() + "\n"
                     + "Số người lớn: " + booking.getNoAdults() + "\n"
                     + "Số trẻ em: " + booking.getNoChildren() + "\n\n"
-                    + "Cảm ơn bạn đã đặt tour và sử dụng dịch vụ chữ ký số!\n\n"
+                    + "Đính kèm theo email này là:\n"
+                    + "- hash_hoa_don.txt : Giá trị hash của hóa đơn\n"
+                    + "- chu_ky_so.txt    : Chữ ký số đã tạo\n\n"
+                    + "Vui lòng lưu lại các file này để đối chiếu sau này.\n\n"
+                    + "Cảm ơn bạn đã sử dụng dịch vụ!\n\n"
                     + "Trân trọng,\n"
                     + "Đội ngũ hỗ trợ";
 
-            message.setText(body);
+            javax.mail.internet.MimeBodyPart textPart = new javax.mail.internet.MimeBodyPart();
+            textPart.setText(body);
+
+            javax.mail.internet.MimeBodyPart hashPart = new javax.mail.internet.MimeBodyPart();
+            hashPart.setContent(invoiceHash, "text/plain; charset=UTF-8");
+            hashPart.setFileName("hash_hoa_don.txt");
+
+            javax.mail.internet.MimeBodyPart signaturePart = new javax.mail.internet.MimeBodyPart();
+            signaturePart.setContent(encryptedResult, "text/plain; charset=UTF-8");
+            signaturePart.setFileName("chu_ky_so.txt");
+
+            javax.mail.internet.MimeMultipart multipart = new javax.mail.internet.MimeMultipart();
+            multipart.addBodyPart(textPart);
+            multipart.addBodyPart(hashPart);
+            multipart.addBodyPart(signaturePart);
+
+            message.setContent(multipart);
+
+            // Gửi email
             javax.mail.Transport.send(message);
+
+            System.out.println("Email đã gửi thành công kèm 2 file đính kèm cho: " + toEmail);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
-}
+    }
 }
